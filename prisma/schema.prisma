@@ -1,0 +1,1909 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  phone      String      @db.VarChar(255)
+  otp        Int?
+  firstName  String      @db.VarChar(255)
+  lastName   String      @db.VarChar(255)
+  email      String      @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar(255)
+  password   String      @db.VarChar(255)
+  role_id    Int?
+  isActive   Int         @default(1) @db.TinyInt
+  createdAt  DateTime    @default(now()) @db.DateTime(6)
+  updatedAt  DateTime    @default(now()) @updatedAt @db.DateTime(6)
+  user_roles user_roles? @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+
+  @@index([role_id], map: "role_id")
+  @@map("users")
+}
+
+model academic_years {
+  id            Int         @id @default(autoincrement())
+  academic_year String      @db.VarChar(255)
+  created_at    DateTime?   @db.DateTime(0)
+  end_date      DateTime?   @db.Date
+  is_active     Boolean?
+  program_id    Int
+  start_date    DateTime?   @db.Date
+  updated_at    DateTime?   @db.DateTime(0)
+  programs      programs    @relation(fields: [program_id], references: [id], onUpdate: Restrict, map: "academic_years_ibfk_1")
+  semesters     semesters[]
+
+  @@index([program_id], map: "program_id")
+}
+
+model advanced_generated_reports {
+  id                        String                     @id @db.VarChar(255)
+  created_at                DateTime?                  @db.DateTime(0)
+  download_count            Int?
+  expires_at                DateTime?                  @db.DateTime(0)
+  file_urls                 Json?
+  generated_at              DateTime?                  @db.DateTime(0)
+  generated_by              String?                    @db.VarChar(255)
+  generation_status         String?                    @db.VarChar(255)
+  organization_id           Int?
+  parameters                Json?
+  report_data               Json
+  report_name               String                     @db.VarChar(255)
+  report_type               String                     @db.VarChar(255)
+  template_id               String?                    @db.VarChar(255)
+  advanced_report_templates advanced_report_templates? @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advanced_generated_reports_ibfk_2")
+  organizations             organizations?             @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "advanced_generated_reports_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+  @@index([template_id], map: "template_id")
+}
+
+model advanced_report_templates {
+  id                         String                       @id @db.VarChar(255)
+  created_at                 DateTime?                    @db.DateTime(0)
+  created_by                 String?                      @db.VarChar(255)
+  data_sources               Json?
+  description                String?                      @db.Text
+  export_formats             Json?
+  filters_config             Json?
+  is_active                  Boolean?
+  is_system_template         Boolean?
+  organization_id            Int?
+  schedule_config            Json?
+  template_config            Json
+  template_name              String                       @db.VarChar(255)
+  template_type              String                       @db.VarChar(255)
+  updated_at                 DateTime?                    @db.DateTime(0)
+  visualization_config       Json?
+  advanced_generated_reports advanced_generated_reports[]
+  organizations              organizations?               @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "advanced_report_templates_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_agent_configs {
+  id              String    @id @db.VarChar(255)
+  agent_type      String    @db.VarChar(255)
+  config_data     Json?
+  created_at      DateTime? @db.DateTime(0)
+  created_by      String?   @db.VarChar(255)
+  is_enabled      Boolean?
+  organization_id String?   @db.VarChar(255)
+  updated_at      DateTime? @db.DateTime(0)
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_agent_metrics {
+  id              String         @id @db.VarChar(255)
+  agent_type      String         @db.VarChar(100)
+  metric_type     String         @db.VarChar(100)
+  metric_value    Float
+  metric_data     Json?
+  period_start    DateTime?      @db.DateTime(0)
+  period_end      DateTime?      @db.DateTime(0)
+  recorded_at     DateTime?      @db.DateTime(0)
+  organization_id Int?
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_agent_metrics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_agent_tasks {
+  id              Int            @id @default(autoincrement())
+  agent_type      String         @db.VarChar(100)
+  task_type       String         @db.VarChar(100)
+  task_status     String?        @db.VarChar(100)
+  priority        Int?
+  course_id       Int?
+  organization_id Int?
+  created_by      String?        @db.VarChar(255)
+  created_at      DateTime?      @db.DateTime(0)
+  updated_at      DateTime?      @db.DateTime(0)
+  started_at      DateTime?      @db.DateTime(0)
+  completed_at    DateTime?      @db.DateTime(0)
+  scheduled_for   DateTime?      @db.DateTime(0)
+  input_data      Json?
+  output_data     Json?
+  error_details   String?        @db.Text
+  courses         courses?       @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_agent_tasks_ibfk_1")
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_agent_tasks_ibfk_2")
+
+  @@index([course_id], map: "course_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_feedback {
+  id                  Int                  @id @default(autoincrement())
+  feedback_type       String               @db.VarChar(100)
+  feedback_score      Int?
+  feedback_comments   String?              @db.Text
+  is_useful           Boolean?
+  course_id           Int?
+  organization_id     Int?
+  ai_task_id          String?              @db.VarChar(255)
+  created_at          DateTime?            @db.DateTime(0)
+  provided_by         String?              @db.VarChar(255)
+  original_suggestion Json
+  faculty_correction  Json?
+  ai_processing_queue ai_processing_queue? @relation(fields: [ai_task_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_feedback_ibfk_1")
+  courses             courses?             @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_feedback_ibfk_2")
+  organizations       organizations?       @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_feedback_ibfk_3")
+
+  @@index([ai_task_id], map: "ai_task_id")
+  @@index([course_id], map: "course_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_interactions {
+  interaction_id     String         @id @db.VarChar(255)
+  interaction_type   String         @db.VarChar(100)
+  ai_model           String?        @db.VarChar(100)
+  input_data         Json
+  output_data        Json?
+  metadata           Json?
+  user_feedback      Json?
+  confidence_score   Float?
+  cost_estimate      Float?
+  processing_time_ms Int?
+  tokens_used        Int?
+  success            Boolean?
+  error_message      String?        @db.Text
+  review_status      String?        @db.VarChar(100)
+  reviewed_by        String?        @db.VarChar(255)
+  reviewed_at        DateTime?      @db.DateTime(0)
+  created_at         DateTime       @db.DateTime(0)
+  organization_id    Int?
+  user_id            String?        @db.VarChar(255)
+  organizations      organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_interactions_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_performance_metrics {
+  id                 String                                @id @db.VarChar(255)
+  operation_type     ai_performance_metrics_operation_type
+  processing_time_ms Int
+  accuracy_score     Float?
+  confidence_score   Float?
+  cost_incurred      Float?
+  tokens_consumed    Int?
+  user_accepted      Boolean?
+  model_used         String?                               @db.VarChar(255)
+  created_at         DateTime?                             @db.DateTime(0)
+  organization_id    Int?
+  organizations      organizations?                        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_performance_metrics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_processing_queue {
+  id                  String         @id @db.VarChar(255)
+  task_type           String         @db.VarChar(100)
+  status              String?        @db.VarChar(100)
+  input_data          Json
+  output_data         Json?
+  confidence_scores   Json?
+  error_details       Json?
+  processing_metadata Json?
+  created_at          DateTime?      @db.DateTime(0)
+  updated_at          DateTime?      @db.DateTime(0)
+  started_at          DateTime?      @db.DateTime(0)
+  completed_at        DateTime?      @db.DateTime(0)
+  priority            Int?
+  max_retries         Int?
+  retry_count         Int?
+  requested_by        String?        @db.VarChar(255)
+  organization_id     Int?
+  ai_feedback         ai_feedback[]
+  organizations       organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_processing_queue_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model ai_recommendations {
+  id                  String         @id @db.VarChar(255)
+  agent_type          String         @db.VarChar(100)
+  recommendation_type String         @db.VarChar(100)
+  title               String         @db.VarChar(255)
+  description         String         @db.Text
+  priority            String?        @db.VarChar(50)
+  status              String?        @db.VarChar(100)
+  confidence_score    Float?
+  created_by_agent    Boolean?
+  course_id           Int?
+  organization_id     Int?
+  target_entity_id    String?        @db.VarChar(255)
+  target_entity_type  String?        @db.VarChar(100)
+  reviewed_by         String?        @db.VarChar(255)
+  created_at          DateTime?      @db.DateTime(0)
+  updated_at          DateTime?      @db.DateTime(0)
+  reviewed_at         DateTime?      @db.DateTime(0)
+  expires_at          DateTime?      @db.DateTime(0)
+  action_taken        Json?
+  recommendation_data Json?
+  courses             courses?       @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_recommendations_ibfk_1")
+  organizations       organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "ai_recommendations_ibfk_2")
+
+  @@index([course_id], map: "course_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model analytics_events {
+  id              String         @id @db.VarChar(255)
+  event_category  String         @db.VarChar(100)
+  event_type      String         @db.VarChar(100)
+  event_data      Json?
+  created_at      DateTime?      @db.DateTime(0)
+  ip_address      String?        @db.VarChar(100)
+  page_path       String?        @db.VarChar(500)
+  session_id      String?        @db.VarChar(255)
+  user_agent      String?        @db.VarChar(500)
+  user_id         String?        @db.VarChar(255)
+  organization_id Int?
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "analytics_events_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model analytics_report_templates {
+  id                String              @id @db.VarChar(255)
+  template_name     String              @db.VarChar(255)
+  template_type     String              @db.VarChar(100)
+  report_scope      String?             @db.VarChar(255)
+  template_config   Json
+  schedule_config   Json?
+  recipients        Json?
+  is_active         Boolean?
+  created_by        String?             @db.VarChar(255)
+  created_at        DateTime?           @db.DateTime(0)
+  updated_at        DateTime?           @db.DateTime(0)
+  analytics_reports analytics_reports[]
+}
+
+model analytics_reports {
+  id                         String                      @id @db.VarChar(255)
+  report_name                String                      @db.VarChar(255)
+  report_type                String                      @db.VarChar(100)
+  report_period_start        DateTime                    @db.Date
+  report_period_end          DateTime                    @db.Date
+  report_data                Json
+  file_url                   String?                     @db.VarChar(1000)
+  generation_status          String?                     @db.VarChar(100)
+  generated_by               String?                     @db.VarChar(255)
+  generated_at               DateTime?                   @db.DateTime(0)
+  created_at                 DateTime?                   @db.DateTime(0)
+  organization_id            Int?
+  template_id                String?                     @db.VarChar(255)
+  analytics_report_templates analytics_report_templates? @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "analytics_reports_ibfk_2")
+  organizations              organizations?              @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "analytics_reports_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+  @@index([template_id], map: "template_id")
+}
+
+model api_integrations {
+  id                   String                        @id @db.VarChar(255)
+  name                 String                        @db.VarChar(255)
+  service_type         api_integrations_service_type
+  api_key_encrypted    String?                       @db.Text
+  configuration        Json?
+  description          String?                       @db.Text
+  endpoint_url         String?                       @db.VarChar(1000)
+  is_active            Boolean?
+  created_by           String?                       @db.VarChar(255)
+  created_at           DateTime?                     @db.DateTime(0)
+  updated_at           DateTime?                     @db.DateTime(0)
+  super_admin_profiles super_admin_profiles?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "api_integrations_ibfk_1")
+
+  @@index([created_by], map: "created_by")
+}
+
+model assessment_batches {
+  id                 String    @id @db.VarChar(255)
+  assessment_name    String    @db.VarChar(255)
+  assessment_type    String    @db.VarChar(100)
+  assessment_date    DateTime  @db.Date
+  batch_name         String    @db.VarChar(255)
+  course_id          Int?
+  created_by         String?   @db.VarChar(255)
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  processed_students Int?      @default(0)
+  total_students     Int?      @default(0)
+  status             String?   @db.VarChar(100)
+  processing_errors  Json?
+  validation_errors  Json?
+  courses            courses?  @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "assessment_batches_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model assessment_papers {
+  id                      String                    @id @db.VarChar(255)
+  paper_name              String                    @db.VarChar(255)
+  assessment_type         String                    @db.VarChar(100)
+  course_id               Int
+  duration_minutes        Int
+  total_marks             Int
+  created_at              DateTime?                 @db.DateTime(0)
+  updated_at              DateTime?                 @db.DateTime(0)
+  created_by              String?                   @db.VarChar(255)
+  instructions            String?                   @db.Text
+  mapping_quality_score   Float?
+  generated_from_mapping  Boolean?
+  blooms_distribution     Json?
+  co_distribution         Json?
+  difficulty_distribution Json?
+  questions               Json?
+  courses                 courses                   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "assessment_papers_ibfk_1")
+  assessment_questions    assessment_questions[]
+  student_question_result student_question_result[]
+
+  @@index([course_id], map: "course_id")
+}
+
+model assessment_questions {
+  id                  String             @id @db.VarChar(255)
+  assessment_paper_id String?            @db.VarChar(255)
+  question_id         String?            @db.VarChar(255)
+  question_number     Int
+  marks_allocated     Int
+  co_mapping          Int
+  is_compulsory       Boolean?
+  created_at          DateTime?          @db.DateTime(0)
+  assessment_papers   assessment_papers? @relation(fields: [assessment_paper_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "assessment_questions_ibfk_1")
+  question_bank       question_bank?     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "assessment_questions_ibfk_2")
+
+  @@index([assessment_paper_id], map: "assessment_paper_id")
+  @@index([question_id], map: "question_id")
+}
+
+model assessment_templates {
+  id                 String    @id @db.VarChar(255)
+  template_name      String    @db.VarChar(255)
+  assessment_type    String    @db.VarChar(100)
+  course_id          Int
+  file_url           String?   @db.VarChar(1000)
+  template_structure Json?
+  created_by         String?   @db.VarChar(255)
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  courses            courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "assessment_templates_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model assessment_templates_enhanced {
+  id                       String         @id @db.VarChar(255)
+  template_name            String         @db.VarChar(255)
+  assessment_type          String         @db.VarChar(100)
+  duration_minutes         Int?
+  total_marks              Int?
+  instructions_template    String?        @db.Text
+  is_system_template       Boolean?
+  usage_count              Int?
+  created_by               String?        @db.VarChar(255)
+  created_at               DateTime?      @db.DateTime(0)
+  updated_at               DateTime?      @db.DateTime(0)
+  organization_id          Int?
+  program_id               Int?
+  blooms_distribution      Json?
+  co_coverage_requirements Json?
+  difficulty_distribution  Json?
+  marking_scheme           Json?
+  question_distribution    Json?
+  template_structure       Json
+  programs                 programs?      @relation(fields: [program_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "assessment_templates_enhanced_ibfk_2")
+  organizations            organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "assessment_templates_enhanced_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+  @@index([program_id], map: "program_id")
+}
+
+model attainment_report_templates {
+  id              String         @id @db.VarChar(255)
+  name            String         @db.VarChar(255)
+  template_type   String         @db.VarChar(100)
+  description     String?        @db.Text
+  is_active       Boolean?
+  auto_generate   Boolean?
+  created_at      DateTime?      @db.DateTime(0)
+  updated_at      DateTime?      @db.DateTime(0)
+  organization_id Int?
+  format_options  Json
+  schedule_config Json?
+  sections        Json
+  stakeholders    Json
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attainment_report_templates_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model attainment_workflows {
+  id                  String                @id @db.VarChar(255)
+  name                String                @db.VarChar(255)
+  description         String?               @db.Text
+  status              String?               @db.VarChar(100)
+  trigger_type        String                @db.VarChar(100)
+  current_step_index  Int?
+  created_by          String?               @db.VarChar(255)
+  created_at          DateTime?             @db.DateTime(0)
+  updated_at          DateTime?             @db.DateTime(0)
+  organization_id     Int?
+  steps               Json
+  trigger_config      Json
+  organizations       organizations?        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attainment_workflows_ibfk_1")
+  workflow_executions workflow_executions[]
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model audit_log {
+  audit_id        String         @id @db.VarChar(255)
+  action          String         @db.VarChar(100)
+  record_id       String         @db.VarChar(255)
+  table_name      String         @db.VarChar(100)
+  created_at      DateTime       @db.DateTime(0)
+  changed_fields  Json?
+  new_values      Json?
+  old_values      Json?
+  risk_level      String?        @db.VarChar(100)
+  ip_address      String?        @db.VarChar(100)
+  session_id      String?        @db.VarChar(255)
+  user_agent      String?        @db.VarChar(500)
+  user_id         String?        @db.VarChar(255)
+  organization_id Int?
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "audit_log_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model audit_logs {
+  id              String                 @id @db.VarChar(255)
+  action          audit_logs_action
+  entity_type     String                 @db.VarChar(100)
+  entity_id       String?                @db.VarChar(255)
+  changes_summary String?                @db.Text
+  new_values      Json?
+  old_values      Json?
+  risk_level      audit_logs_risk_level?
+  ip_address      String?                @db.VarChar(100)
+  user_agent      String?                @db.VarChar(500)
+  user_email      String?                @db.VarChar(255)
+  user_id         String?                @db.VarChar(255)
+  organization_id Int?
+  created_at      DateTime?              @db.DateTime(0)
+  organizations   organizations?         @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "audit_logs_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model backup_jobs {
+  id              String                  @id @db.VarChar(255)
+  job_name        String                  @db.VarChar(255)
+  backup_type     backup_jobs_backup_type
+  status          backup_jobs_status?
+  backup_location String?                 @db.VarChar(1000)
+  schedule_cron   String?                 @db.VarChar(100)
+  created_at      DateTime?               @db.DateTime(0)
+  last_run_at     DateTime?               @db.DateTime(0)
+}
+
+model billing_history {
+  id                   String                          @id @db.VarChar(255)
+  organization_id      Int
+  invoice_number       String                          @db.VarChar(100)
+  billing_period_start DateTime                        @db.Date
+  billing_period_end   DateTime                        @db.Date
+  subtotal             Float
+  tax_amount           Float?
+  total_amount         Float
+  currency             String?                         @db.VarChar(10)
+  notes                String?                         @db.Text
+  transaction_id       String?                         @db.VarChar(255)
+  payment_method       String?                         @db.VarChar(100)
+  payment_status       billing_history_payment_status?
+  payment_date         DateTime?                       @db.Date
+  generated_by         String?                         @db.VarChar(255)
+  created_at           DateTime?                       @db.DateTime(0)
+  updated_at           DateTime?                       @db.DateTime(0)
+  overage_charges      Json?
+  usage_details        Json?
+  super_admin_profiles super_admin_profiles?           @relation(fields: [generated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_history_ibfk_2")
+  organizations        organizations                   @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "billing_history_ibfk_1")
+
+  @@index([generated_by], map: "generated_by")
+  @@index([organization_id], map: "organization_id")
+}
+
+model bulk_import_sessions {
+  id                  String                @id @db.VarChar(255)
+  session_name        String                @db.VarChar(255)
+  organization_id     Int?
+  import_type         String?               @db.VarChar(100)
+  status              String?               @db.VarChar(100)
+  imported_courses    Int?
+  total_courses       Int?
+  created_by          String?               @db.VarChar(255)
+  created_at          DateTime?             @db.DateTime(0)
+  updated_at          DateTime?             @db.DateTime(0)
+  completed_at        DateTime?             @db.DateTime(0)
+  session_data        Json?
+  validation_issues   Json?
+  organizations       organizations?        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bulk_import_sessions_ibfk_1")
+  course_import_queue course_import_queue[]
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model co_attainments {
+  id                      String    @id @db.VarChar(255)
+  course_id               Int
+  co_number               Int
+  assessment_cycle        String    @db.VarChar(100)
+  achieved_percentage     Float?
+  target_percentage       Float?
+  threshold_marks         Float?
+  students_evaluated      Int?      @default(0)
+  students_passed         Int?      @default(0)
+  attainment_level        String?   @db.VarChar(100)
+  calculation_method      String?   @db.VarChar(100)
+  calculated_at           DateTime? @db.DateTime(0)
+  created_at              DateTime? @db.DateTime(0)
+  updated_at              DateTime? @db.DateTime(0)
+  assessment_breakdown    Json?
+  improvement_suggestions Json?
+  trend_analysis          Json?
+  courses                 courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "co_attainments_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model co_po_mappings {
+  id           Int       @id @default(autoincrement())
+  course_id    Int
+  mapping_data Json
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  courses      courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "co_po_mappings_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model compliance_reports {
+  id                   String         @id @db.VarChar(255)
+  compliance_framework String         @db.VarChar(255)
+  report_type          String         @db.VarChar(100)
+  report_period_start  DateTime       @db.Date
+  report_period_end    DateTime       @db.Date
+  compliance_score     Float?
+  report_data          Json
+  findings             Json?
+  recommendations      Json?
+  generated_by         String?        @db.VarChar(255)
+  organization_id      Int?
+  created_at           DateTime?      @db.DateTime(0)
+  organizations        organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "compliance_reports_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model course_import_queue {
+  id                   String                @id @db.VarChar(255)
+  course_data          Json
+  course_id            Int?
+  session_id           String?               @db.VarChar(255)
+  import_status        String?               @db.VarChar(100)
+  validation_errors    Json?
+  created_at           DateTime?             @db.DateTime(0)
+  updated_at           DateTime?             @db.DateTime(0)
+  bulk_import_sessions bulk_import_sessions? @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "course_import_queue_ibfk_2")
+  courses              courses?              @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "course_import_queue_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+  @@index([session_id], map: "session_id")
+}
+
+model course_templates {
+  id                 String         @id @db.VarChar(255)
+  course_count       Int?
+  created_at         DateTime?      @db.DateTime(0)
+  created_by         String?        @db.VarChar(255)
+  credits_total      Int?
+  description        String?        @db.Text
+  is_active          Boolean?
+  is_system_template Boolean?
+  name               String         @db.VarChar(255)
+  organization_id    Int?
+  program_type       String         @db.VarChar(255)
+  template_data      Json?
+  template_type      String?        @db.VarChar(255)
+  updated_at         DateTime?      @db.DateTime(0)
+  organizations      organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "course_templates_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model course_units {
+  id              Int       @id @default(autoincrement())
+  content         String?   @db.Text
+  course_id       Int?
+  created_at      DateTime? @db.DateTime(0)
+  hours_allocated Int?
+  title           String    @db.VarChar(255)
+  unit_number     Int
+  updated_at      DateTime? @db.DateTime(0)
+  courses         courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "course_units_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model courses {
+  id                            Int                             @id @default(autoincrement())
+  code                          String                          @db.VarChar(100)
+  name                          String                          @db.VarChar(255)
+  description                   String?                         @db.Text
+  course_type                   courses_course_type?
+  credits                       Int?                            @default(0)
+  practical_hours               Int?
+  theory_hours                  Int?
+  syllabus_file_url             String?                         @db.VarChar(500)
+  created_at                    DateTime?                       @db.DateTime(0)
+  updated_at                    DateTime?                       @db.DateTime(0)
+  extraction_status             String?                         @db.VarChar(100)
+  extraction_confidence         Float?
+  is_active                     Boolean?
+  file_upload_id                Int?
+  semester_id                   Int?
+  co_mapping                    Json?
+  po_mapping                    Json?
+  extracted_data                Json?
+  syllabus_metadata             Json?
+  instructor_details            Json?
+  learning_outcomes             Json?
+  prerequisites                 Json?
+  ai_agent_tasks                ai_agent_tasks[]
+  ai_feedback                   ai_feedback[]
+  ai_recommendations            ai_recommendations[]
+  assessment_batches            assessment_batches[]
+  assessment_papers             assessment_papers[]
+  assessment_templates          assessment_templates[]
+  co_attainments                co_attainments[]
+  co_po_mappings                co_po_mappings[]
+  course_import_queue           course_import_queue[]
+  course_outcomes               course_outcomes[]
+  course_units                  course_units[]
+  semesters                     semesters?                      @relation(fields: [semester_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_2")
+  file_uploads                  file_uploads?                   @relation(fields: [file_upload_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_1")
+  evidence_repository           evidence_repository[]
+  instructor_course_assignments instructor_course_assignments[]
+  learning_objectives           learning_objectives[]
+  question_bank                 question_bank[]
+  reference_books               reference_books[]
+  student_assessments           student_assessments[]
+  student_performance_analytics student_performance_analytics[]
+  student_question_result       student_question_result[]
+  textbooks                     textbooks[]
+  web_resources                 web_resources[]
+
+  @@index([file_upload_id], map: "file_upload_id")
+  @@index([semester_id], map: "semester_id")
+}
+
+model custom_rubrics {
+  id                     String         @id @db.VarChar(255)
+  name                   String         @db.VarChar(255)
+  rubric_type            String         @db.VarChar(100)
+  description            String?        @db.Text
+  is_active              Boolean?
+  is_default             Boolean?
+  criteria               Json
+  scoring_levels         Json
+  weightage_distribution Json?
+  created_by             String?        @db.VarChar(255)
+  organization_id        Int?
+  created_at             DateTime?      @db.DateTime(0)
+  updated_at             DateTime?      @db.DateTime(0)
+  organizations          organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "custom_rubrics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model data_quality_issues {
+  id              String         @id @db.VarChar(255)
+  description     String         @db.Text
+  entity_type     String         @db.VarChar(100)
+  issue_type      String         @db.VarChar(100)
+  severity        String         @db.VarChar(50)
+  status          String?        @db.VarChar(100)
+  entity_id       String?        @db.VarChar(255)
+  resolved_by     String?        @db.VarChar(255)
+  organization_id Int?
+  details         Json?
+  created_at      DateTime?      @db.DateTime(0)
+  updated_at      DateTime?      @db.DateTime(0)
+  resolved_at     DateTime?      @db.DateTime(0)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_quality_issues_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model data_retention_policies {
+  id                    String         @id @db.VarChar(255)
+  policy_name           String         @db.VarChar(255)
+  data_type             String         @db.VarChar(100)
+  compliance_framework  String?        @db.VarChar(100)
+  retention_period_days Int
+  is_active             Boolean?
+  organization_id       Int?
+  created_at            DateTime?      @db.DateTime(0)
+  updated_at            DateTime?      @db.DateTime(0)
+  organizations         organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "data_retention_policies_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model evidence_repository {
+  id                        String                @id @db.VarChar(255)
+  title                     String                @db.VarChar(255)
+  evidence_type             String                @db.VarChar(100)
+  category                  String?               @db.VarChar(100)
+  access_level              String?               @db.VarChar(50)
+  course_id                 Int?
+  organization_id           Int?
+  parent_evidence_id        String?               @db.VarChar(255)
+  program_id                Int?
+  description               String?               @db.Text
+  file_url                  String?               @db.Text
+  file_hash                 String?               @db.VarChar(255)
+  mime_type                 String?               @db.VarChar(100)
+  metadata                  Json?
+  tags                      Json?
+  version_number            Int?
+  file_size                 BigInt?
+  download_count            Int?
+  uploaded_by               String?               @db.VarChar(255)
+  created_at                DateTime?             @db.DateTime(0)
+  updated_at                DateTime?             @db.DateTime(0)
+  last_accessed_at          DateTime?             @db.DateTime(0)
+  evidence_repository       evidence_repository?  @relation("evidence_repositoryToevidence_repository", fields: [parent_evidence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evidence_repository_ibfk_3")
+  other_evidence_repository evidence_repository[] @relation("evidence_repositoryToevidence_repository")
+  courses                   courses?              @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "evidence_repository_ibfk_1")
+  programs                  programs?             @relation(fields: [program_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "evidence_repository_ibfk_4")
+  organizations             organizations?        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "evidence_repository_ibfk_2")
+
+  @@index([course_id], map: "course_id")
+  @@index([organization_id], map: "organization_id")
+  @@index([parent_evidence_id], map: "parent_evidence_id")
+  @@index([program_id], map: "program_id")
+}
+
+model feature_usage_analytics {
+  id               String        @id @db.VarChar(255)
+  feature_name     String        @db.VarChar(255)
+  feature_category String?       @db.VarChar(100)
+  organization_id  Int
+  usage_count      Int?
+  created_at       DateTime?     @db.DateTime(0)
+  updated_at       DateTime?     @db.DateTime(0)
+  first_used_at    DateTime?     @db.DateTime(0)
+  last_used_at     DateTime?     @db.DateTime(0)
+  stats_date       DateTime?     @db.Date
+  organizations    organizations @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "feature_usage_analytics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model file_uploads {
+  id                 Int       @id @default(autoincrement())
+  file_path          String    @db.VarChar(1000)
+  file_size          Int
+  mime_type          String    @db.VarChar(255)
+  original_filename  String    @db.VarChar(500)
+  stored_filename    String    @db.VarChar(500)
+  processing_status  String?   @db.VarChar(100)
+  processing_results Json?
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  uploader_id        String?   @db.VarChar(255)
+  organization_id    String?   @db.VarChar(255)
+  courses            courses[]
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model generated_reports {
+  id                      String                 @id @db.VarChar(255)
+  report_name             String                 @db.VarChar(255)
+  report_scope            Json?
+  generated_data          Json
+  academic_years          Json?
+  approved_by             String?                @db.VarChar(255)
+  assessment_cycles       Json?
+  compliance_score        Decimal?               @db.Decimal(5, 2)
+  created_at              DateTime?              @db.DateTime(0)
+  evidence_attachments    Json?
+  file_urls               Json?
+  gap_analysis            Json?
+  generated_by            String?                @db.VarChar(255)
+  manual_content          Json?
+  organization_id         Int?
+  parent_report_id        String?                @db.VarChar(255)
+  program_ids             Json?
+  recommendations         Json?
+  reviewed_by             String?                @db.VarChar(255)
+  status                  String?                @db.VarChar(100)
+  submitted_at            DateTime?              @db.DateTime(0)
+  template_id             String?                @db.VarChar(255)
+  updated_at              DateTime?              @db.DateTime(0)
+  version_number          Int?
+  generated_reports       generated_reports?     @relation("generated_reportsTogenerated_reports", fields: [parent_report_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "generated_reports_ibfk_1")
+  other_generated_reports generated_reports[]    @relation("generated_reportsTogenerated_reports")
+  report_templates        report_templates?      @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "generated_reports_ibfk_2")
+  organizations           organizations?         @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "generated_reports_ibfk_3")
+  report_collaborators    report_collaborators[]
+
+  @@index([organization_id], map: "organization_id")
+  @@index([parent_report_id], map: "parent_report_id")
+  @@index([template_id], map: "template_id")
+}
+
+model instructor_course_assignments {
+  assignment_id   String        @id @db.VarChar(255)
+  course_id       Int
+  organization_id Int
+  user_id         String        @db.VarChar(255)
+  academic_year   String?       @db.VarChar(50)
+  semester        String?       @db.VarChar(50)
+  status          String?       @db.VarChar(50)
+  assigned_by     String?       @db.VarChar(255)
+  assigned_at     DateTime?     @db.DateTime(0)
+  created_at      DateTime?     @db.DateTime(0)
+  updated_at      DateTime?     @db.DateTime(0)
+  courses         courses       @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "instructor_course_assignments_ibfk_1")
+  organizations   organizations @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "instructor_course_assignments_ibfk_2")
+
+  @@index([course_id], map: "course_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model kpi_definitions {
+  id                  String         @id @db.VarChar(255)
+  kpi_name            String         @db.VarChar(255)
+  kpi_category        String         @db.VarChar(100)
+  calculation_formula String         @db.Text
+  data_sources        Json?
+  description         String?        @db.Text
+  frequency           String?        @db.VarChar(50)
+  unit                String?        @db.VarChar(50)
+  target_value        Decimal?       @db.Decimal(10, 2)
+  critical_threshold  Decimal?       @db.Decimal(10, 2)
+  warning_threshold   Decimal?       @db.Decimal(10, 2)
+  is_active           Boolean?
+  created_by          String?        @db.VarChar(255)
+  created_at          DateTime?      @db.DateTime(0)
+  updated_at          DateTime?      @db.DateTime(0)
+  organization_id     Int?
+  organizations       organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "kpi_definitions_ibfk_1")
+  kpi_values          kpi_values[]
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model kpi_values {
+  id                   String           @id @db.VarChar(255)
+  calculated_at        DateTime?        @db.DateTime(0)
+  calculated_value     Float
+  calculation_metadata Json?
+  kpi_id               String?          @db.VarChar(255)
+  organization_id      Int?
+  period_end           DateTime         @db.Date
+  period_start         DateTime         @db.Date
+  status               String?          @db.VarChar(100)
+  target_value         Float?
+  variance_percentage  Float?
+  kpi_definitions      kpi_definitions? @relation(fields: [kpi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "kpi_values_ibfk_1")
+  organizations        organizations?   @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "kpi_values_ibfk_2")
+
+  @@index([kpi_id], map: "kpi_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model learning_objectives {
+  id               String    @id @db.VarChar(255)
+  lo_number        Int
+  description      String    @db.Text
+  confidence_score Float?
+  course_id        Int?
+  created_at       DateTime? @db.DateTime(0)
+  updated_at       DateTime? @db.DateTime(0)
+  courses          courses?  @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "learning_objectives_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement())
+  timestamp BigInt
+  name      String @db.VarChar(255)
+}
+
+model notification_queue {
+  id                 String         @id @db.VarChar(255)
+  attempts           Int?
+  max_attempts       Int?
+  status             String?        @db.VarChar(50)
+  priority           String?        @db.VarChar(50)
+  delivery_channel   String?        @db.VarChar(50)
+  recipient_email    String?        @db.VarChar(255)
+  subject            String?        @db.VarChar(255)
+  body               String?        @db.Text
+  template_key       String?        @db.VarChar(100)
+  template_variables Json?
+  error_message      String?        @db.Text
+  created_at         DateTime?      @db.DateTime(0)
+  scheduled_for      DateTime?      @db.DateTime(0)
+  delivered_at       DateTime?      @db.DateTime(0)
+  last_attempt_at    DateTime?      @db.DateTime(0)
+  organization_id    Int?
+  organizations      organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "notification_queue_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model notification_templates {
+  id                 String    @id @db.VarChar(255)
+  template_name      String    @db.VarChar(255)
+  template_key       String    @db.VarChar(255)
+  subject_template   String    @db.Text
+  body_template      String    @db.Text
+  delivery_channels  Json?
+  frequency_limit    Json?
+  trigger_conditions Json?
+  variables          Json?
+  priority           String?   @db.VarChar(50)
+  is_active          Boolean?
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+}
+
+model organization_analytics_summary {
+  id                           String         @id @db.VarChar(255)
+  organization_id              Int?
+  summary_date                 DateTime?      @db.Date
+  summary_type                 String?        @db.VarChar(100)
+  avg_session_duration_minutes Float?
+  engagement_score             Float?
+  health_score                 Float?
+  total_active_users           Int?
+  total_invitations_accepted   Int?
+  total_invitations_sent       Int?
+  total_role_changes           Int?
+  total_sessions               Int?
+  feature_usage_summary        Json?
+  created_at                   DateTime?      @db.DateTime(0)
+  organizations                organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "organization_analytics_summary_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model organization_members {
+  membership_id   String        @id @db.VarChar(255)
+  organization_id Int
+  user_id         String        @db.VarChar(255)
+  role            String        @db.VarChar(50)
+  status          String?       @db.VarChar(50)
+  invited_at      DateTime?     @db.DateTime(0)
+  invited_by      String?       @db.VarChar(255)
+  joined_at       DateTime?     @db.DateTime(0)
+  created_at      DateTime?     @db.DateTime(0)
+  updated_at      DateTime?     @db.DateTime(0)
+  organizations   organizations @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "organization_members_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model organization_onboarding {
+  id                     String                @id @db.VarChar(255)
+  organization_id        Int
+  assigned_support_agent String?               @db.VarChar(255)
+  started_at             DateTime?             @db.DateTime(0)
+  completed_at           DateTime?             @db.DateTime(0)
+  created_at             DateTime?             @db.DateTime(0)
+  updated_at             DateTime?             @db.DateTime(0)
+  current_step           Int?
+  total_steps            Int?
+  completion_percentage  Float?
+  users_imported         Boolean?
+  programs_configured    Boolean?
+  support_notes          String?               @db.Text
+  step_data              Json?
+  steps_completed        Json?
+  super_admin_profiles   super_admin_profiles? @relation(fields: [assigned_support_agent], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "organization_onboarding_ibfk_2")
+  organizations          organizations         @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "organization_onboarding_ibfk_1")
+
+  @@index([assigned_support_agent], map: "assigned_support_agent")
+  @@index([organization_id], map: "organization_id")
+}
+
+model organization_summary_cache {
+  organization_id   Int                                           @id
+  code              String?                                       @db.VarChar(255)
+  name              String?                                       @db.VarChar(255)
+  status            organization_summary_cache_status?
+  subscription_tier organization_summary_cache_subscription_tier?
+  type              organization_summary_cache_type?
+  active_users      Int?
+  total_users       Int?
+  updated_at        DateTime?                                     @db.DateTime(0)
+  organizations     organizations                                 @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "organization_summary_cache_ibfk_1")
+}
+
+model organization_templates {
+  id                   String                               @id @db.VarChar(255)
+  name                 String                               @db.VarChar(255)
+  template_type        organization_templates_template_type
+  created_by           String?                              @db.VarChar(255)
+  created_at           DateTime?                            @db.DateTime(0)
+  updated_at           DateTime?                            @db.DateTime(0)
+  version              String?                              @db.VarChar(100)
+  description          String?                              @db.Text
+  is_active            Boolean?
+  is_system_template   Boolean?
+  config_data          Json?
+  default_pos          Json?
+  default_psos         Json?
+  applicable_for       Json?
+  super_admin_profiles super_admin_profiles?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "organization_templates_ibfk_1")
+
+  @@index([created_by], map: "created_by")
+}
+
+model organization_usage_stats {
+  id                  String                               @id @db.VarChar(255)
+  organization_id     Int
+  stats_date          DateTime                             @db.Date
+  stats_type          organization_usage_stats_stats_type?
+  active_users        Int?
+  ai_suggestions_used Int?
+  courses_created     Int?
+  syllabi_processed   Int?
+  total_logins        Int?
+  storage_used_gb     Float?
+  created_at          DateTime?                            @db.DateTime(0)
+  organizations       organizations                        @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "organization_usage_stats_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model organizations {
+  id                             Int                                @id @default(autoincrement())
+  code                           String                             @db.VarChar(100)
+  name                           String                             @db.VarChar(255)
+  official_email                 String                             @db.VarChar(255)
+  phone                          String?                            @db.VarChar(20)
+  website                        String?                            @db.VarChar(255)
+  notes                          String?                            @db.Text
+  created_by                     String?                            @db.VarChar(255)
+  created_at                     DateTime?                          @db.DateTime(0)
+  updated_at                     DateTime?                          @db.DateTime(0)
+  deleted_at                     DateTime?                          @db.DateTime(0)
+  subscription_start_date        DateTime?                          @db.Date
+  subscription_end_date          DateTime?                          @db.Date
+  onboarding_completed           Boolean?
+  onboarding_step                Int?
+  established_year               Int?
+  data_retention_days            Int?
+  max_users                      Int?
+  max_courses                    Int?
+  subdomain                      String?                            @db.VarChar(100)
+  type                           organizations_type
+  status                         organizations_status?
+  subscription_status            organizations_subscription_status?
+  subscription_tier              organizations_subscription_tier?
+  address                        Json?
+  affiliation                    Json?
+  accreditation                  Json?
+  compliance_flags               Json?
+  features                       Json?
+  integration_settings           Json?
+  privacy_settings               Json?
+  security_settings              Json?
+  custom_branding                Json?
+  advanced_generated_reports     advanced_generated_reports[]
+  advanced_report_templates      advanced_report_templates[]
+  ai_agent_metrics               ai_agent_metrics[]
+  ai_agent_tasks                 ai_agent_tasks[]
+  ai_feedback                    ai_feedback[]
+  ai_interactions                ai_interactions[]
+  ai_performance_metrics         ai_performance_metrics[]
+  ai_processing_queue            ai_processing_queue[]
+  ai_recommendations             ai_recommendations[]
+  analytics_events               analytics_events[]
+  analytics_reports              analytics_reports[]
+  assessment_templates_enhanced  assessment_templates_enhanced[]
+  attainment_report_templates    attainment_report_templates[]
+  attainment_workflows           attainment_workflows[]
+  audit_log                      audit_log[]
+  audit_logs                     audit_logs[]
+  billing_history                billing_history[]
+  bulk_import_sessions           bulk_import_sessions[]
+  compliance_reports             compliance_reports[]
+  course_templates               course_templates[]
+  custom_rubrics                 custom_rubrics[]
+  data_quality_issues            data_quality_issues[]
+  data_retention_policies        data_retention_policies[]
+  evidence_repository            evidence_repository[]
+  feature_usage_analytics        feature_usage_analytics[]
+  generated_reports              generated_reports[]
+  instructor_course_assignments  instructor_course_assignments[]
+  kpi_definitions                kpi_definitions[]
+  kpi_values                     kpi_values[]
+  notification_queue             notification_queue[]
+  organization_analytics_summary organization_analytics_summary[]
+  organization_members           organization_members[]
+  organization_onboarding        organization_onboarding[]
+  organization_summary_cache     organization_summary_cache?
+  organization_usage_stats       organization_usage_stats[]
+  predictive_models              predictive_models[]
+  predictive_predictions         predictive_predictions[]
+  real_time_metrics              real_time_metrics[]
+  support_tickets                support_tickets[]
+  user_activity_analytics        user_activity_analytics[]
+  user_invitations               user_invitations[]
+  user_profiles                  user_profiles[]
+  user_role_history              user_role_history[]
+  user_sessions                  user_sessions[]
+}
+
+model performance_alerts {
+  id                      String                                  @id @db.VarChar(255)
+  alert_name              String                                  @db.VarChar(255)
+  metric_name             String                                  @db.VarChar(255)
+  check_interval_minutes  Int?
+  cooldown_minutes        Int?
+  comparison_operator     performance_alerts_comparison_operator?
+  critical_threshold      Float?
+  warning_threshold       Float?
+  is_active               Boolean?
+  last_triggered_at       DateTime?                               @db.DateTime(0)
+  created_at              DateTime?                               @db.DateTime(0)
+  notification_channels   Json?
+  notification_recipients Json?
+}
+
+model po_attainments {
+  id                    String    @id @db.VarChar(255)
+  program_id            Int
+  po_number             Int
+  assessment_cycle      String    @db.VarChar(255)
+  attainment_percentage Float?
+  attainment_value      Float?
+  target_value          Float?
+  status                String?   @db.VarChar(50)
+  created_at            DateTime? @db.DateTime(0)
+  updated_at            DateTime? @db.DateTime(0)
+  calculated_at         DateTime? @db.DateTime(0)
+  action_plan           Json?
+  contributing_courses  Json?
+  external_validation   Json?
+  industry_feedback     Json?
+  programs              programs  @relation(fields: [program_id], references: [id], onUpdate: Restrict, map: "po_attainments_ibfk_1")
+
+  @@index([program_id], map: "program_id")
+}
+
+model predictive_models {
+  id                     String                   @id @db.VarChar(255)
+  model_name             String                   @db.VarChar(255)
+  model_type             String                   @db.VarChar(100)
+  model_file_url         String?                  @db.Text
+  description            String?                  @db.Text
+  accuracy_score         Float?
+  target_column          String?                  @db.VarChar(255)
+  status                 String?                  @db.VarChar(50)
+  created_by             String?                  @db.VarChar(255)
+  created_at             DateTime?                @db.DateTime(0)
+  updated_at             DateTime?                @db.DateTime(0)
+  last_trained_at        DateTime?                @db.DateTime(0)
+  organization_id        Int?
+  model_config           Json?
+  model_metrics          Json?
+  feature_columns        Json?
+  training_data_sources  Json?
+  organizations          organizations?           @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "predictive_models_ibfk_1")
+  predictive_predictions predictive_predictions[]
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model predictive_predictions {
+  id                  String             @id @db.VarChar(255)
+  input_data          Json
+  predicted_value     Float?
+  actual_value        Float?
+  confidence_score    Float?
+  prediction_metadata Json?
+  created_at          DateTime?          @db.DateTime(0)
+  model_id            String?            @db.VarChar(255)
+  organization_id     Int?
+  predictive_models   predictive_models? @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "predictive_predictions_ibfk_1")
+  organizations       organizations?     @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "predictive_predictions_ibfk_2")
+
+  @@index([model_id], map: "model_id")
+  @@index([organization_id], map: "organization_id")
+}
+
+model programs {
+  id                            Int                             @id @default(autoincrement())
+  code                          String                          @db.VarChar(100)
+  name                          String                          @db.VarChar(255)
+  description                   String?                         @db.Text
+  accreditation_details         Json?
+  admission_criteria            Json?
+  duration_years                Int?
+  total_semesters               Int?
+  program_type                  programs_program_type
+  status                        programs_status?
+  organization_id               String                          @db.VarChar(255)
+  created_at                    DateTime?                       @db.DateTime(0)
+  updated_at                    DateTime?                       @db.DateTime(0)
+  academic_years                academic_years[]
+  assessment_templates_enhanced assessment_templates_enhanced[]
+  evidence_repository           evidence_repository[]
+  po_attainments                po_attainments[]
+  student_performance_analytics student_performance_analytics[]
+}
+
+model question_bank {
+  id                      String                    @id @db.VarChar(255)
+  course_id               Int
+  question_text           String                    @db.Text
+  question_type           String                    @db.VarChar(100)
+  answer_key              String                    @db.VarChar(255)
+  blooms_level            String                    @db.VarChar(100)
+  difficulty              String                    @db.VarChar(100)
+  co_mapping              Int?                      @default(0)
+  unit_mapping            Int?
+  marks                   Int?                      @default(0)
+  options                 Json?
+  performance_score       Float?
+  usage_count             Int?                      @default(0)
+  created_by              String?                   @db.VarChar(255)
+  created_at              DateTime?                 @db.DateTime(0)
+  updated_at              DateTime?                 @db.DateTime(0)
+  last_used_date          DateTime?                 @db.DateTime(0)
+  assessment_questions    assessment_questions[]
+  courses                 courses                   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "question_bank_ibfk_1")
+  student_question_result student_question_result[]
+
+  @@index([course_id], map: "course_id")
+}
+
+model real_time_metrics {
+  id              String         @id @db.VarChar(255)
+  metric_name     String         @db.VarChar(255)
+  metric_type     String         @db.VarChar(100)
+  metric_value    Float
+  timestamp_hour  DateTime       @db.DateTime(0)
+  organization_id Int?
+  dimensions      Json?
+  created_at      DateTime?      @db.DateTime(0)
+  updated_at      DateTime?      @db.DateTime(0)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "real_time_metrics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model report_collaborators {
+  id                String             @id @db.VarChar(255)
+  role              String             @db.VarChar(100)
+  user_id           String             @db.VarChar(255)
+  report_id         String?            @db.VarChar(255)
+  added_by          String?            @db.VarChar(255)
+  added_at          DateTime?          @db.DateTime(0)
+  permissions       Json?
+  generated_reports generated_reports? @relation(fields: [report_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_collaborators_ibfk_1")
+
+  @@index([report_id], map: "report_id")
+}
+
+model report_templates {
+  id                    String              @id @db.VarChar(255)
+  template_name         String              @db.VarChar(255)
+  template_type         String              @db.VarChar(100)
+  framework             String              @db.VarChar(255)
+  version               String?             @db.VarChar(50)
+  description           String?             @db.Text
+  criteria              Json?
+  sections              Json?
+  template_structure    Json?
+  scoring_methodology   Json?
+  evidence_requirements Json?
+  is_active             Boolean?
+  is_system_template    Boolean?
+  created_by            String?             @db.VarChar(255)
+  created_at            DateTime?           @db.DateTime(0)
+  updated_at            DateTime?           @db.DateTime(0)
+  generated_reports     generated_reports[]
+}
+
+model semesters {
+  id                            Int                             @id @default(autoincrement())
+  name                          String                          @db.VarChar(255)
+  year_number                   Int?
+  semester_number               Int
+  semester_type                 semesters_semester_type
+  academic_year_id              Int
+  is_active                     Boolean?
+  start_date                    DateTime?                       @db.Date
+  end_date                      DateTime?                       @db.Date
+  exam_start_date               DateTime?                       @db.Date
+  exam_end_date                 DateTime?                       @db.Date
+  created_at                    DateTime?                       @db.DateTime(0)
+  updated_at                    DateTime?                       @db.DateTime(0)
+  courses                       courses[]
+  academic_years                academic_years                  @relation(fields: [academic_year_id], references: [id], onUpdate: Restrict, map: "semesters_ibfk_1")
+  student_performance_analytics student_performance_analytics[]
+
+  @@index([academic_year_id], map: "academic_year_id")
+}
+
+model student_assessments {
+  id                  String    @id @db.VarChar(255)
+  assessment_date     DateTime  @db.Date
+  assessment_name     String    @db.VarChar(255)
+  assessment_type     String    @db.VarChar(100)
+  co_scores           Json?
+  course_id           Int?
+  created_at          DateTime? @db.DateTime(0)
+  max_marks           Int?
+  question_scores     Json?
+  student_name        String    @db.VarChar(255)
+  student_roll_number String    @db.VarChar(100)
+  total_score         Float?
+  updated_at          DateTime? @db.DateTime(0)
+  uploaded_by         String?   @db.VarChar(255)
+  courses             courses?  @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "student_assessments_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model student_performance_analytics {
+  id                  String     @id @db.VarChar(255)
+  assessment_trend    Json?
+  co_wise_performance Json?
+  course_id           Int?
+  created_at          DateTime?  @db.DateTime(0)
+  improvement_areas   Json?
+  last_calculated     DateTime?  @db.DateTime(0)
+  overall_percentage  Float?
+  po_wise_performance Json?
+  program_id          Int?
+  recommendations     Json?
+  semester_id         Int?
+  strengths           Json?
+  student_name        String     @db.VarChar(255)
+  student_roll_number String     @db.VarChar(100)
+  updated_at          DateTime?  @db.DateTime(0)
+  courses             courses?   @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "student_performance_analytics_ibfk_1")
+  programs            programs?  @relation(fields: [program_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "student_performance_analytics_ibfk_2")
+  semesters           semesters? @relation(fields: [semester_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "student_performance_analytics_ibfk_3")
+
+  @@index([course_id], map: "course_id")
+  @@index([program_id], map: "program_id")
+  @@index([semester_id], map: "semester_id")
+}
+
+model student_question_result {
+  result_id         String             @id @db.VarChar(255)
+  academic_year     String             @db.VarChar(20)
+  assessment_date   DateTime           @db.Date
+  assessment_id     String?            @db.VarChar(255)
+  assessment_type   String             @db.VarChar(100)
+  co_number         Int
+  course_id         Int
+  created_at        DateTime?          @db.DateTime(0)
+  evaluated_at      DateTime?          @db.DateTime(0)
+  evaluated_by      String?            @db.VarChar(255)
+  marks_obtained    Float?
+  po_mapping        Json?
+  question_id       String?            @db.VarChar(255)
+  question_number   Int
+  remarks           String?            @db.Text
+  semester          String             @db.VarChar(50)
+  student_id        String             @db.VarChar(255)
+  total_marks       Float
+  updated_at        DateTime?          @db.DateTime(0)
+  assessment_papers assessment_papers? @relation(fields: [assessment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "student_question_result_ibfk_1")
+  question_bank     question_bank?     @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "student_question_result_ibfk_3")
+  courses           courses            @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "student_question_result_ibfk_2")
+
+  @@index([assessment_id], map: "assessment_id")
+  @@index([course_id], map: "course_id")
+  @@index([question_id], map: "question_id")
+}
+
+model subscription_plans {
+  id                       String                            @id @db.VarChar(255)
+  ai_extractions_per_month Int?
+  ai_mappings_per_month    Int?
+  ai_questions_per_month   Int?
+  annual_price             Float?
+  created_at               DateTime?                         @db.DateTime(0)
+  currency                 String?                           @db.VarChar(10)
+  features                 Json
+  is_active                Boolean?
+  is_public                Boolean?
+  max_courses              Int
+  max_storage_gb           Int?
+  max_users                Int
+  monthly_price            Float?
+  name                     String                            @db.VarChar(255)
+  support_level            subscription_plans_support_level?
+  tier                     subscription_plans_tier?
+  updated_at               DateTime?                         @db.DateTime(0)
+}
+
+model super_admin_profiles {
+  id                       String                     @id @db.VarChar(255)
+  full_name                String                     @db.VarChar(255)
+  email                    String                     @db.VarChar(255)
+  phone                    String?                    @db.VarChar(50)
+  avatar_url               String?                    @db.VarChar(1000)
+  access_level             Int?
+  account_locked           Boolean?
+  is_active                Boolean?
+  mfa_enabled              Boolean?
+  mfa_secret               String?                    @db.VarChar(255)
+  login_count              Int?
+  failed_login_attempts    Int?
+  locked_until             DateTime?                  @db.DateTime(0)
+  last_login               DateTime?                  @db.DateTime(0)
+  password_changed_at      DateTime?                  @db.DateTime(0)
+  created_at               DateTime?                  @db.DateTime(0)
+  updated_at               DateTime?                  @db.DateTime(0)
+  language                 String?                    @db.VarChar(50)
+  timezone                 String?                    @db.VarChar(100)
+  role                     super_admin_profiles_role?
+  allowed_organizations    Json?
+  backup_codes             Json?
+  ip_whitelist             Json?
+  dashboard_preferences    Json?
+  notification_preferences Json?
+  permissions              Json?
+  api_integrations         api_integrations[]
+  billing_history          billing_history[]
+  organization_onboarding  organization_onboarding[]
+  organization_templates   organization_templates[]
+  support_communications   support_communications[]
+  support_tickets          support_tickets[]
+  system_settings          system_settings[]
+}
+
+model support_communications {
+  id                   String                @id @db.VarChar(255)
+  message              String                @db.Text
+  sender_type          String                @db.VarChar(100)
+  ticket_id            String                @db.VarChar(255)
+  sender_id            String?               @db.VarChar(255)
+  is_internal          Boolean?
+  created_at           DateTime?             @db.DateTime(0)
+  support_tickets      support_tickets       @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "support_communications_ibfk_1")
+  super_admin_profiles super_admin_profiles? @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "support_communications_ibfk_2")
+
+  @@index([sender_id], map: "sender_id")
+  @@index([ticket_id], map: "ticket_id")
+}
+
+model support_metrics_cache {
+  id               String    @id @db.VarChar(255)
+  month            String    @db.VarChar(20)
+  resolved_tickets Int?
+  total_tickets    Int?
+  urgent_tickets   Int?
+  updated_at       DateTime? @db.DateTime(0)
+}
+
+model support_tickets {
+  id                           String                   @id @db.VarChar(255)
+  ticket_number                String                   @db.VarChar(100)
+  title                        String                   @db.Text
+  description                  String                   @db.Text
+  created_by_email             String                   @db.VarChar(255)
+  category                     String                   @db.VarChar(100)
+  status                       String?                  @db.VarChar(100)
+  priority                     String?                  @db.VarChar(100)
+  tags                         Json?
+  attachments                  Json?
+  customer_satisfaction_rating Int?
+  resolved_at                  DateTime?                @db.DateTime(0)
+  created_at                   DateTime?                @db.DateTime(0)
+  updated_at                   DateTime?                @db.DateTime(0)
+  assigned_to                  String?                  @db.VarChar(255)
+  organization_id              Int?
+  support_communications       support_communications[]
+  super_admin_profiles         super_admin_profiles?    @relation(fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "support_tickets_ibfk_1")
+  organizations                organizations?           @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "support_tickets_ibfk_2")
+
+  @@index([assigned_to], map: "assigned_to")
+  @@index([organization_id], map: "organization_id")
+}
+
+model system_health_logs {
+  id               String    @id @db.VarChar(255)
+  service_name     String    @db.VarChar(255)
+  status           String    @db.VarChar(50)
+  component        String?   @db.VarChar(255)
+  server_location  String?   @db.VarChar(255)
+  error_message    String?   @db.Text
+  response_time_ms Int?
+  additional_data  Json?
+  created_at       DateTime? @db.DateTime(0)
+}
+
+model system_performance_metrics {
+  id                        String    @id @db.VarChar(255)
+  ai_avg_processing_time_ms Float?    @db.Float
+  ai_cost_per_hour          Float?    @db.Float
+  ai_requests_per_minute    Float?    @db.Float
+  ai_success_rate           Float?    @db.Float
+  api_avg_response_time_ms  Float?    @db.Float
+  api_error_rate            Float?    @db.Float
+  api_requests_per_minute   Float?    @db.Float
+  backup_storage_used_gb    Float?    @db.Float
+  concurrent_users          Int?
+  cpu_usage_percentage      Float?    @db.Float
+  db_connections_active     Int?
+  db_connections_max        Int?
+  db_query_avg_time_ms      Float?    @db.Float
+  db_slow_queries_count     Int?
+  disk_usage_percentage     Float?    @db.Float
+  memory_usage_percentage   Float?    @db.Float
+  peak_concurrent_users     Int?
+  recorded_at               DateTime? @db.DateTime(0)
+  total_storage_used_gb     Float?    @db.Float
+}
+
+model system_settings {
+  id                   String                @id @db.VarChar(255)
+  setting_key          String                @db.VarChar(255)
+  setting_value        Json
+  description          String?               @db.Text
+  environment          String?               @db.VarChar(100)
+  setting_type         String?               @db.VarChar(100)
+  is_sensitive         Boolean?
+  created_at           DateTime?             @db.DateTime(0)
+  updated_at           DateTime?             @db.DateTime(0)
+  created_by           String?               @db.VarChar(255)
+  super_admin_profiles super_admin_profiles? @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "system_settings_ibfk_1")
+
+  @@index([created_by], map: "created_by")
+}
+
+model user_activity_analytics {
+  id                       String         @id @db.VarChar(255)
+  activity_date            DateTime?      @db.Date
+  activity_type            String         @db.VarChar(255)
+  created_at               DateTime?      @db.DateTime(0)
+  activity_data            Json?
+  feature_interactions     Json?
+  page_views               Int?
+  session_duration_minutes Float?         @db.Float
+  organization_id          Int?
+  user_id                  String?        @db.VarChar(255)
+  organizations            organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_activity_analytics_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model user_invitations {
+  id                 String        @id @db.VarChar(255)
+  email              String        @db.VarChar(255)
+  invitation_token   String        @db.VarChar(255)
+  organization_id    Int
+  role               String        @db.VarChar(100)
+  status             String?       @db.VarChar(50)
+  created_at         DateTime?     @db.DateTime(0)
+  expires_at         DateTime      @db.DateTime(0)
+  accepted_at        DateTime?     @db.DateTime(0)
+  invitation_message String?       @db.Text
+  invited_by         String?       @db.VarChar(255)
+  organizations      organizations @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "user_invitations_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model user_profiles {
+  id              String         @id @db.VarChar(255)
+  email           String         @db.VarChar(255)
+  full_name       String?        @db.VarChar(255)
+  avatar_url      String?        @db.VarChar(2083)
+  is_active       Boolean?
+  role            String?        @db.VarChar(100)
+  created_at      DateTime?      @db.DateTime(0)
+  updated_at      DateTime?      @db.DateTime(0)
+  organization_id Int?
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profiles_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model user_role_history {
+  id              String        @id @db.VarChar(255)
+  changed_at      DateTime?     @db.DateTime(0)
+  changed_by      String?       @db.VarChar(255)
+  created_at      DateTime?     @db.DateTime(0)
+  new_role        String        @db.VarChar(100)
+  old_role        String?       @db.VarChar(100)
+  reason          String?       @db.Text
+  user_id         String        @db.VarChar(255)
+  organization_id Int
+  organizations   organizations @relation(fields: [organization_id], references: [id], onUpdate: Restrict, map: "user_role_history_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model user_sessions {
+  id              String         @id @db.VarChar(255)
+  created_at      DateTime?      @db.DateTime(0)
+  ip_address      Json?
+  is_active       Boolean?       @default(true)
+  organization_id Int?
+  session_end     DateTime?      @db.DateTime(0)
+  session_start   DateTime       @db.DateTime(0)
+  user_agent      String?        @db.Text
+  user_id         String         @db.VarChar(255)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_sessions_ibfk_1")
+
+  @@index([organization_id], map: "organization_id")
+}
+
+model workflow_executions {
+  id                   String                @id @db.VarChar(255)
+  completed_at         DateTime?             @db.DateTime(0)
+  context              Json?
+  current_step         Int?
+  started_at           DateTime?             @db.DateTime(0)
+  status               String?               @db.VarChar(100)
+  step_results         Json?
+  workflow_id          String?               @db.VarChar(255)
+  attainment_workflows attainment_workflows? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "workflow_executions_ibfk_1")
+
+  @@index([workflow_id], map: "workflow_id")
+}
+
+model course_outcomes {
+  id        Int     @id @default(autoincrement())
+  co_number String  @db.VarChar(10)
+  content   String  @db.Text
+  course_id Int
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "course_outcomes_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model reference_books {
+  id        Int     @id @default(autoincrement())
+  title     String  @db.VarChar(255)
+  author    String? @db.VarChar(255)
+  edition   String? @db.VarChar(100)
+  year      Int?
+  publisher String? @db.VarChar(255)
+  course_id Int
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reference_books_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model textbooks {
+  id        Int     @id @default(autoincrement())
+  title     String  @db.VarChar(255)
+  author    String? @db.VarChar(255)
+  edition   String? @db.VarChar(100)
+  year      Int?
+  publisher String? @db.VarChar(255)
+  course_id Int
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "textbooks_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+model user_roles {
+  id    Int    @id @default(autoincrement())
+  role  String @db.VarChar(50)
+  users User[]
+}
+
+model web_resources {
+  id        Int     @id @default(autoincrement())
+  url       String  @db.Text
+  course_id Int
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "web_resources_ibfk_1")
+
+  @@index([course_id], map: "course_id")
+}
+
+enum ai_performance_metrics_operation_type {
+  classification
+  generation
+  translation
+  summarization
+}
+
+enum audit_logs_action {
+  create
+  update
+  delete
+  read
+}
+
+enum api_integrations_service_type {
+  zoom
+  google_calendar
+  slack
+  custom
+}
+
+enum backup_jobs_backup_type {
+  full
+  incremental
+  differential
+}
+
+enum organization_templates_template_type {
+  internal
+  external
+  standard
+  custom
+}
+
+enum backup_jobs_status {
+  pending
+  running
+  completed
+  failed
+}
+
+enum organization_summary_cache_status {
+  active
+  inactive
+  pending
+  suspended
+}
+
+enum organization_usage_stats_stats_type {
+  daily
+  weekly
+  monthly
+  custom
+}
+
+enum semesters_semester_type {
+  odd
+  even
+  summer
+}
+
+enum courses_course_type {
+  core
+  elective
+  lab
+}
+
+enum organization_summary_cache_subscription_tier {
+  free
+  basic
+  premium
+  enterprise
+}
+
+enum organization_summary_cache_type {
+  school
+  college
+  university
+  training_center
+}
+
+enum performance_alerts_comparison_operator {
+  greater_than     @map(">")
+  less_than        @map("<")
+  equal_to         @map("=")
+  greater_or_equal @map(">=")
+  less_or_equal    @map("<=")
+}
+
+enum audit_logs_risk_level {
+  low
+  medium
+  high
+}
+
+enum programs_program_type {
+  diploma
+  undergraduate
+  postgraduate
+  doctorate
+}
+
+enum programs_status {
+  active
+  inactive
+  pending
+}
+
+enum billing_history_payment_status {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum subscription_plans_support_level {
+  basic
+  standard
+  premium
+}
+
+enum subscription_plans_tier {
+  free
+  starter
+  pro
+  enterprise
+}
+
+enum super_admin_profiles_role {
+  owner
+  admin
+  viewer
+}
+
+enum organizations_type {
+  college
+  university
+  school
+  coaching
+}
+
+enum organizations_status {
+  active
+  inactive
+  pending
+}
+
+enum organizations_subscription_status {
+  trial
+  active
+  canceled
+}
+
+enum organizations_subscription_tier {
+  basic
+  pro
+  enterprise
+}
