@@ -66,4 +66,23 @@ export class SyllabusService {
     }
     return programWithCourses.courses;
   }
+
+  async getCourseOutcomesByCourseId(courseId: number) {
+    return this.prisma.course_outcomes.findMany({
+      where: {
+        course_id: courseId,
+      },
+    });
+  }
+
+  async getCOPOMappingsByCourseId(courseId: number) {
+    return this.prisma.co_po_mappings.findMany({
+      where: {
+        course_id: courseId,
+      },
+      include: {
+        co_po_mapping_data: true,
+      },
+    });
+  }
 }
