@@ -5,6 +5,7 @@ import { APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { ProgramManagementModule } from './features/program-management/program-management.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
     AuthModule,
+    ProgramManagementModule,
   ],
   controllers: [AppController],
   providers: [
