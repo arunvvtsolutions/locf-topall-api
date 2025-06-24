@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ProgramOutcomesService } from './program-outcomes.service';
 import { CreateProgramOutcomeDto } from './dto/create-program-outcome.dto';
-import { UpdateProgramOutcomeDto } from './dto/update-program-outcome.dto';
 
 @Controller('program-outcomes')
 export class ProgramOutcomesController {
@@ -15,6 +14,11 @@ export class ProgramOutcomesController {
   @Get()
   findAll() {
     return this.programOutcomesService.findAll();
+  }
+
+  @Get('program/:programId')
+  findByProgramId(@Param('programId') programId: string) {
+    return this.programOutcomesService.findByProgramId(Number(programId));
   }
 
 

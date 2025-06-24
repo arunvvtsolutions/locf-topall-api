@@ -21,4 +21,8 @@ export class ProgramOutcomesService {
     return this.programOutcomeRepository.find();
   }
 
+  async findByProgramId(programId: number): Promise<ProgramOutcome[]> {
+    return this.programOutcomeRepository.find({ where: { program_id: programId } });
+  }
+
 }
