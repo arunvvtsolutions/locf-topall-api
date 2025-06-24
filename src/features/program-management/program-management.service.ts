@@ -48,6 +48,7 @@ export class ProgramManagementService {
           status: program.status,
         };
       });
+      
       return resModel;
     } catch (error) {
       throw error;
@@ -57,9 +58,6 @@ export class ProgramManagementService {
   async findOne(id: number) {
     const program = await this.prisma.programs.findUnique({
       where: { id },
-      include: {
-        academic_years: true,
-      },
     });
 
     if (!program) {

@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ProgramManagementModule } from './features/program-management/program-management.module';
+import { AcademicYearsModule } from './features/academic-years/academic-years.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ProgramManagementModule } from './features/program-management/program-m
     }),
     AuthModule,
     ProgramManagementModule,
+    AcademicYearsModule,
   ],
   controllers: [AppController],
   providers: [
