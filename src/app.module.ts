@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ProgramManagementModule } from './features/program-management/program-management.module';
 import { AcademicYearsModule } from './features/academic-years/academic-years.module';
+import { YearsModule } from './features/years/years.module';
 import { ProgramOutcomesModule } from './features/program-outcomes/program-outcomes.module';
 import { SyllabusModule } from './features/syllabus/syllabus.module';
 
@@ -40,6 +41,7 @@ import { SyllabusModule } from './features/syllabus/syllabus.module';
     AuthModule,
     ProgramManagementModule,
     AcademicYearsModule,
+    YearsModule,
     ProgramOutcomesModule,
     SyllabusModule,
   ],

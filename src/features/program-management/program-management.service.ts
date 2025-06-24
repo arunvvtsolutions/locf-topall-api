@@ -12,13 +12,23 @@ export class ProgramManagementService {
 
   async create(createProgramManagementDto: CreateProgramManagementDto) {
     try {
-      const { program_type, ...rest } = createProgramManagementDto;
+      const { program_type, academic_year_id, ...rest } = createProgramManagementDto;
+      
+      const academicYear = await this.prisma.academic_years.findUnique({
+        where: { id: academic_year_id },
+      });
+
+      if (!academicYear) {
+        throw new NotFoundException(`Academic year with ID ${academic_year_id} not found`);
+      }
+
       return this.prisma.programs.create({
         data: {
           ...rest,
+          academic_year_id : academic_year_id, 
           program_type: program_type.toLowerCase() as any,
           status: (createProgramManagementDto.status?.toLowerCase() as programs_status) || 'draft',
-        } as Prisma.programsCreateInput,
+        },
       });
     } catch (error) {
       console.error('Error creating program:', error);
@@ -46,9 +56,10 @@ export class ProgramManagementService {
           totalSemesters: program.total_semesters,
           programType: program.program_type,
           status: program.status,
+          programId: program.academic_year_id,
         };
       });
-      
+
       return resModel;
     } catch (error) {
       throw error;
@@ -71,8 +82,8 @@ export class ProgramManagementService {
     // Check if program exists
     await this.findOne(id);
 
-    const { program_type, status, ...rest } = updateProgramManagementDto;
-    const updateData: Prisma.programsUpdateInput = { ...rest };
+    const { program_type, status, academic_year_id, ...rest } = updateProgramManagementDto;
+    const updateData: any = { ...rest };
 
     if (program_type) {
       updateData.program_type = program_type.toLowerCase() as any;
@@ -80,6 +91,20 @@ export class ProgramManagementService {
 
     if (status) {
       updateData.status = status.toLowerCase() as programs_status;
+    }
+
+    // Handle academic_year_id if provided
+    if (academic_year_id !== undefined) {
+      // Verify the new academic year exists
+      const academicYear = await this.prisma.academic_years.findUnique({
+        where: { id: academic_year_id },
+      });
+
+      if (!academicYear) {
+        throw new NotFoundException(`Academic year with ID ${academic_year_id} not found`);
+      }
+
+      updateData.academic_year_id = academic_year_id;
     }
 
     return this.prisma.programs.update({
