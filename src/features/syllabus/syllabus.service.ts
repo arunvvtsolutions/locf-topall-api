@@ -29,4 +29,41 @@ export class SyllabusService {
     });
   }
 
+  async getFileProcessingStatus(id: number) {
+    const file = await this.prisma.file_uploads.findUnique({
+      where: { id },
+      select: { processing_results: true },
+    });
+    if (!file) {
+      throw new NotFoundException(`File with id ${id} not found`);
+    }
+    return file;
+  }
+
+  async getCoursesByProgramId(programId: number) {
+    const programWithCourses = await this.prisma.programs.findUnique({
+      where: {
+        id: programId,
+      },
+      include: {
+        courses: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            description: true,
+            course_type: true,
+            credits: true,
+            practical_hours: true,
+            theory_hours: true,
+            syllabus_file_url: true,
+          },
+        },
+      },
+    });
+    if (!programWithCourses) {
+      return [];
+    }
+    return programWithCourses.courses;
+  }
 }
