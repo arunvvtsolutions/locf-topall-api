@@ -27,11 +27,15 @@ model User {
 }
 
 model academic_years {
-  id            Int       @id @default(autoincrement())
-  academic_year String    @db.VarChar(255)
-  created_at    DateTime? @db.DateTime(0)
-  is_active     Boolean?
-  updated_at    DateTime? @db.DateTime(0)
+  id         Int        @id @default(autoincrement())
+  year_id    Int
+  created_at DateTime?  @db.DateTime(0)
+  is_active  Boolean?
+  updated_at DateTime?  @db.DateTime(0)
+  years      years      @relation(fields: [year_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "academic_years_ibfk_1")
+  programs   programs[]
+
+  @@index([year_id], map: "year_id")
 }
 
 model advanced_generated_reports {
@@ -1265,13 +1269,17 @@ model programs {
   program_type                  programs_program_type
   status                        programs_status?
   organization_id               String                          @db.VarChar(255)
+  academic_year_id              Int
   created_at                    DateTime                        @default(now()) @db.DateTime(0)
   updated_at                    DateTime                        @default(now()) @db.DateTime(0)
   assessment_templates_enhanced assessment_templates_enhanced[]
   evidence_repository           evidence_repository[]
   po_attainments                po_attainments[]
   program_outcomes              program_outcomes[]
+  academic_years                academic_years                  @relation(fields: [academic_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "programs_ibfk_1")
   student_performance_analytics student_performance_analytics[]
+
+  @@index([academic_year_id], map: "academic_year_id")
 }
 
 model question_bank {
@@ -1929,6 +1937,14 @@ model streams {
   updated_at   DateTime?      @default(now()) @db.DateTime(0)
   ai_questions ai_questions[]
   subjects     subjects[]
+}
+
+model years {
+  id             Int              @id @default(autoincrement())
+  years          String           @db.VarChar(100)
+  created_at     DateTime?        @default(now()) @db.DateTime(0)
+  updated_at     DateTime?        @default(now()) @db.DateTime(0)
+  academic_years academic_years[]
 }
 
 enum ai_performance_metrics_operation_type {

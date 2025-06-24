@@ -63,4 +63,9 @@ export class CreateProgramManagementDto {
   @IsString()
   @IsNotEmpty()
   organization_id: string;
+
+  @ApiProperty({ description: 'academic_year_id of the program', required: false })
+  @IsNumber()
+  @IsNotEmpty()
+  academic_year_id: number;
 }
