@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProgramManagementModule } from './features/program-management/program-management.module';
 import { AcademicYearsModule } from './features/academic-years/academic-years.module';
 import { YearsModule } from './features/years/years.module';
+import { ProgramOutcomesModule } from './features/program-outcomes/program-outcomes.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { YearsModule } from './features/years/years.module';
     ProgramManagementModule,
     AcademicYearsModule,
     YearsModule,
+    ProgramOutcomesModule,
   ],
   controllers: [AppController],
   providers: [
