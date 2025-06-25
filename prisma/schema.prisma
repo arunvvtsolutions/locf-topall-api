@@ -588,6 +588,9 @@ model co_po_mappings {
   mapping_data Json
   created_at   DateTime? @db.DateTime(0)
   updated_at   DateTime? @db.DateTime(0)
+  co_label     String    @db.VarChar(10)
+  po_label     String    @db.VarChar(10)
+  value        Int
   courses      courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "co_po_mappings_ibfk_1")
 
   @@index([course_id], map: "course_id")
@@ -666,15 +669,12 @@ model courses {
   code                          String                          @db.VarChar(100)
   year_id                       Int
   course_name_id                Int
-  description                   String?                         @db.Text
   course_type                   courses_course_type?
   credits                       Int?                            @default(0)
   instruction_hours             Int?
   syllabus_file_url             String?                         @db.VarChar(500)
   created_at                    DateTime?                       @db.DateTime(0)
   updated_at                    DateTime?                       @db.DateTime(0)
-  extraction_status             String?                         @db.VarChar(100)
-  extraction_confidence         Float?
   program_id                    Int
   is_active                     Boolean?
   file_upload_id                Int?
@@ -682,8 +682,6 @@ model courses {
   co_mapping                    Json?
   po_mapping                    Json?
   extracted_data                Json?
-  syllabus_metadata             Json?
-  instructor_details            Json?
   learning_outcomes             Json?
   prerequisites                 Json?
   ai_agent_tasks                ai_agent_tasks[]

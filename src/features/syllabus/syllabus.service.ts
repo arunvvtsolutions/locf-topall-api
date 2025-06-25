@@ -62,7 +62,6 @@ export class SyllabusService {
                   s_name: true,
                 },
               },
-              description: true,
               course_type: true,
               credits: true,
               syllabus_file_url: true,
@@ -76,8 +75,8 @@ export class SyllabusService {
         organization_id: programWithCourses.organization_id,
         name: course.subjects.s_name,
         code: course.code,
+        description : programWithCourses.description,
         credits: course.credits,
-        description: course.description,
         // subjects: course.subjects,
         course_type: course.course_type,
         syllabus_file_url: course.syllabus_file_url,
@@ -94,14 +93,28 @@ export class SyllabusService {
       console.error('Error fetching program with courses:', error);
       throw new Error('Could not fetch program with courses');
     }
-  };
+  }
 
   async getCourseOutcomesByCourseId(courseId: number) {
-    return this.prisma.course_outcomes.findMany({
-      where: {
-        course_id: courseId,
-      },
-    });
+    try {
+      const courseOutcomes = await this.prisma.courses.findMany({
+        where: {
+          id: courseId,
+        },
+        select: {
+          id: true,
+          code: true,
+          program_id: true,
+          credits: true,
+         
+        }
+      });
+      console.log('courseOutcomes', courseOutcomes);
+      return courseOutcomes;
+    } catch (error) {
+      console.error('Error fetching course outcomes:', error);
+      throw new Error('Could not fetch course outcomes');
+    }
   }
 
   async getCOPOMappingsByCourseId(courseId: number) {
