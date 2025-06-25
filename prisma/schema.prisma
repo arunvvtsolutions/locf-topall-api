@@ -664,12 +664,12 @@ model course_units {
 model courses {
   id                            Int                             @id @default(autoincrement())
   code                          String                          @db.VarChar(100)
-  sub_id                        Int
+  year_id                       Int
+  course_name_id                Int
   description                   String?                         @db.Text
   course_type                   courses_course_type?
   credits                       Int?                            @default(0)
-  practical_hours               Int?
-  theory_hours                  Int?
+  inst_hours                    Int?
   syllabus_file_url             String?                         @db.VarChar(500)
   created_at                    DateTime?                       @db.DateTime(0)
   updated_at                    DateTime?                       @db.DateTime(0)
@@ -700,7 +700,8 @@ model courses {
   semesters                     semesters?                      @relation(fields: [semester_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_2")
   file_uploads                  file_uploads?                   @relation(fields: [file_upload_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_1")
   programs                      programs                        @relation(fields: [program_id], references: [id], onDelete: Cascade, map: "courses_ibfk_4")
-  subjects                      subjects                        @relation(fields: [sub_id], references: [id], onDelete: Cascade, map: "courses_ibfk_5")
+  subjects                      subjects                        @relation(fields: [course_name_id], references: [id], onDelete: Cascade, map: "courses_ibfk_5")
+  years                         years                           @relation(fields: [year_id], references: [id], onDelete: Cascade, map: "courses_ibfk_6")
   evidence_repository           evidence_repository[]
   instructor_course_assignments instructor_course_assignments[]
   learning_objectives           learning_objectives[]
@@ -715,7 +716,8 @@ model courses {
   @@index([file_upload_id], map: "file_upload_id")
   @@index([semester_id], map: "semester_id")
   @@index([program_id], map: "program_id")
-  @@index([sub_id], map: "sub_id")
+  @@index([course_name_id], map: "course_name_id")
+  @@index([year_id], map: "year_id")
 }
 
 model custom_rubrics {
@@ -1766,21 +1768,15 @@ model chapters {
   s_no          Int             @id @default(autoincrement())
   s_id          Int
   c_name        String          @db.VarChar(255)
-  weightage     Int
-  order         Int?
-  short_url     String          @db.VarChar(50)
-  employee_id   Int
   status        Int             @default(1)
   is_deleted    Int             @default(0)
   added_date    DateTime        @default(now()) @db.DateTime(0)
   updated_date  DateTime        @default(now()) @db.DateTime(0)
   ai_questions  ai_questions[]
-  employees     employees       @relation(fields: [employee_id], references: [s_no], onUpdate: Restrict, map: "Employee")
   subjects      subjects        @relation(fields: [s_id], references: [id], onUpdate: Restrict, map: "Subject")
   old_questions old_questions[]
   topics        topics[]
 
-  @@index([employee_id], map: "Employee")
   @@index([s_id], map: "Subject")
 }
 
@@ -1796,7 +1792,6 @@ model employees {
   added_date   DateTime   @default(now()) @db.DateTime(0)
   updated_date DateTime   @default(now()) @db.DateTime(0)
   description  String     @db.VarChar(255)
-  chapters     chapters[]
   subjects     subjects[]
   topics       topics[]
 }
@@ -1962,6 +1957,7 @@ model years {
   created_at     DateTime?        @default(now()) @db.DateTime(0)
   updated_at     DateTime?        @default(now()) @db.DateTime(0)
   academic_years academic_years[]
+  courses        courses[]
 }
 
 model old_questions {
