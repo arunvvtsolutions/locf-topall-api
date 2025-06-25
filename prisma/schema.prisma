@@ -675,6 +675,7 @@ model courses {
   updated_at                    DateTime?                       @db.DateTime(0)
   extraction_status             String?                         @db.VarChar(100)
   extraction_confidence         Float?
+  program_id                    Int
   is_active                     Boolean?
   file_upload_id                Int?
   semester_id                   Int?
@@ -698,6 +699,7 @@ model courses {
   course_units                  course_units[]
   semesters                     semesters?                      @relation(fields: [semester_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_2")
   file_uploads                  file_uploads?                   @relation(fields: [file_upload_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "courses_ibfk_1")
+  programs                      programs                        @relation(fields: [program_id], references: [id], onDelete: Cascade, map: "courses_ibfk_4")
   evidence_repository           evidence_repository[]
   instructor_course_assignments instructor_course_assignments[]
   learning_objectives           learning_objectives[]
@@ -711,6 +713,7 @@ model courses {
 
   @@index([file_upload_id], map: "file_upload_id")
   @@index([semester_id], map: "semester_id")
+  @@index([program_id], map: "program_id")
 }
 
 model custom_rubrics {
@@ -823,6 +826,7 @@ model file_uploads {
   file_size          Int
   mime_type          String    @db.VarChar(255)
   original_filename  String    @db.VarChar(500)
+  program_id         Int
   stored_filename    String    @db.VarChar(500)
   processing_status  String?   @db.VarChar(100)
   processing_results Json?
@@ -831,8 +835,10 @@ model file_uploads {
   uploader_id        String?   @db.VarChar(255)
   organization_id    String?   @db.VarChar(255)
   courses            courses[]
+  programs           programs  @relation(fields: [program_id], references: [id], onDelete: Cascade, map: "file_uploads_ibfk_1")
 
   @@index([organization_id], map: "organization_id")
+  @@index([program_id], map: "program_id")
 }
 
 model generated_reports {
@@ -1273,7 +1279,9 @@ model programs {
   created_at                    DateTime                        @default(now()) @db.DateTime(0)
   updated_at                    DateTime                        @default(now()) @db.DateTime(0)
   assessment_templates_enhanced assessment_templates_enhanced[]
+  courses                       courses[]
   evidence_repository           evidence_repository[]
+  file_uploads                  file_uploads[]
   po_attainments                po_attainments[]
   program_outcomes              program_outcomes[]
   academic_years                academic_years                  @relation(fields: [academic_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "programs_ibfk_1")
@@ -1751,22 +1759,23 @@ model web_resources {
 }
 
 model chapters {
-  s_no         Int            @id @default(autoincrement())
-  s_id         Int
-  class_id     Int
-  c_name       String         @db.VarChar(255)
-  weightage    Int
-  order        Int?
-  short_url    String         @db.VarChar(50)
-  employee_id  Int
-  status       Int            @default(1)
-  is_deleted   Int            @default(0)
-  added_date   DateTime       @default(now()) @db.DateTime(0)
-  updated_date DateTime       @default(now()) @db.DateTime(0)
-  ai_questions ai_questions[]
-  employees    employees      @relation(fields: [employee_id], references: [s_no], onUpdate: Restrict, map: "Employee")
-  subjects     subjects       @relation(fields: [s_id], references: [s_no], onUpdate: Restrict, map: "Subject")
-  topics       topics[]
+  s_no          Int             @id @default(autoincrement())
+  s_id          Int
+  class_id      Int
+  c_name        String          @db.VarChar(255)
+  weightage     Int
+  order         Int?
+  short_url     String          @db.VarChar(50)
+  employee_id   Int
+  status        Int             @default(1)
+  is_deleted    Int             @default(0)
+  added_date    DateTime        @default(now()) @db.DateTime(0)
+  updated_date  DateTime        @default(now()) @db.DateTime(0)
+  ai_questions  ai_questions[]
+  employees     employees       @relation(fields: [employee_id], references: [s_no], onUpdate: Restrict, map: "Employee")
+  subjects      subjects        @relation(fields: [s_id], references: [s_no], onUpdate: Restrict, map: "Subject")
+  old_questions old_questions[]
+  topics        topics[]
 
   @@index([class_id], map: "Class")
   @@index([employee_id], map: "Employee")
@@ -1803,40 +1812,42 @@ model program_outcomes {
 }
 
 model subjects {
-  s_no         Int            @id @default(autoincrement())
-  s_name       String         @db.VarChar(50)
-  short_url    String         @db.VarChar(50)
-  stream       Int
-  employee_id  Int
-  status       Int            @default(1)
-  is_deleted   Int            @default(0)
-  added_date   DateTime       @default(now()) @db.DateTime(0)
-  updated_date DateTime       @default(now()) @db.DateTime(0)
-  ai_questions ai_questions[]
-  chapters     chapters[]
-  employees    employees      @relation(fields: [employee_id], references: [s_no], onUpdate: Restrict, map: "Employee Id")
-  streams      streams        @relation(fields: [stream], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "streamId")
-  topics       topics[]
+  s_no          Int             @id @default(autoincrement())
+  s_name        String          @db.VarChar(50)
+  short_url     String          @db.VarChar(50)
+  stream        Int
+  employee_id   Int
+  status        Int             @default(1)
+  is_deleted    Int             @default(0)
+  added_date    DateTime        @default(now()) @db.DateTime(0)
+  updated_date  DateTime        @default(now()) @db.DateTime(0)
+  ai_questions  ai_questions[]
+  chapters      chapters[]
+  old_questions old_questions[]
+  employees     employees       @relation(fields: [employee_id], references: [s_no], onUpdate: Restrict, map: "Employee Id")
+  streams       streams         @relation(fields: [stream], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "streamId")
+  topics        topics[]
 
   @@index([employee_id], map: "Employee Id")
   @@index([stream], map: "streamId")
 }
 
 model topics {
-  s_no         Int            @id @default(autoincrement())
-  s_id         Int
-  c_id         Int
-  t_name       String         @db.VarChar(255)
-  short_url    String         @db.VarChar(50)
-  employee_id  Int
-  status       Int            @default(1)
-  is_deleted   Int            @default(0)
-  added_date   DateTime       @default(now()) @db.DateTime(0)
-  updated_date DateTime       @default(now()) @db.DateTime(0)
-  ai_questions ai_questions[]
-  chapters     chapters       @relation(fields: [c_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Chapters")
-  employees    employees      @relation(fields: [employee_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Employees")
-  subjects     subjects       @relation(fields: [s_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Subjects")
+  s_no          Int             @id @default(autoincrement())
+  s_id          Int
+  c_id          Int
+  t_name        String          @db.VarChar(255)
+  short_url     String          @db.VarChar(50)
+  employee_id   Int
+  status        Int             @default(1)
+  is_deleted    Int             @default(0)
+  added_date    DateTime        @default(now()) @db.DateTime(0)
+  updated_date  DateTime        @default(now()) @db.DateTime(0)
+  ai_questions  ai_questions[]
+  old_questions old_questions[]
+  chapters      chapters        @relation(fields: [c_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Chapters")
+  employees     employees       @relation(fields: [employee_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Employees")
+  subjects      subjects        @relation(fields: [s_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Subjects")
 
   @@index([c_id], map: "Chapters")
   @@index([employee_id], map: "Employees")
@@ -1876,6 +1887,7 @@ model ai_questions {
   users                                                         User            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "ai_questions_ibfk_5")
   question_types                                                question_types  @relation(fields: [question_type], references: [s_no], onDelete: Cascade, map: "ai_questions_ibfk_6")
   streams                                                       streams         @relation(fields: [stream], references: [s_no], onDelete: Cascade, map: "ai_questions_ibfk_7")
+  old_questions                                                 old_questions[]
 
   @@index([c_id], map: "c_id")
   @@index([cognitive_level], map: "cognitive_level")
@@ -1887,13 +1899,14 @@ model ai_questions {
 }
 
 model cognitive_level {
-  s_no                                                       Int            @id @default(autoincrement())
-  title                                                      String         @db.VarChar(255)
-  status                                                     Int            @default(1)
-  is_deleted                                                 Int            @default(0)
-  added_date                                                 DateTime       @default(now()) @db.DateTime(0)
-  updated_date                                               DateTime       @default(now()) @db.DateTime(0)
-  ai_questions_ai_questions_cognitive_levelTocognitive_level ai_questions[] @relation("ai_questions_cognitive_levelTocognitive_level")
+  s_no                                                         Int             @id @default(autoincrement())
+  title                                                        String          @db.VarChar(255)
+  status                                                       Int             @default(1)
+  is_deleted                                                   Int             @default(0)
+  added_date                                                   DateTime        @default(now()) @db.DateTime(0)
+  updated_date                                                 DateTime        @default(now()) @db.DateTime(0)
+  ai_questions_ai_questions_cognitive_levelTocognitive_level   ai_questions[]  @relation("ai_questions_cognitive_levelTocognitive_level")
+  old_questions_old_questions_cognitive_levelTocognitive_level old_questions[] @relation("old_questions_cognitive_levelTocognitive_level")
 }
 
 model question_diificulty {
@@ -1945,6 +1958,49 @@ model years {
   created_at     DateTime?        @default(now()) @db.DateTime(0)
   updated_at     DateTime?        @default(now()) @db.DateTime(0)
   academic_years academic_years[]
+}
+
+model old_questions {
+  s_no                                                           Int             @id @default(autoincrement())
+  q_id                                                           Int
+  question                                                       String          @db.Text
+  correct_opt                                                    String          @db.VarChar(255)
+  option_a                                                       String          @db.Text
+  option_b                                                       String          @db.Text
+  option_c                                                       String          @db.Text
+  option_d                                                       String          @db.Text
+  answer_desc                                                    String          @db.Text
+  difficulty                                                     Int
+  question_type                                                  Int
+  t_id                                                           Int
+  s_id                                                           Int
+  c_id                                                           Int
+  cognitive_level                                                Int
+  keywords                                                       String?         @db.Text
+  estimated_time                                                 Float?          @db.Float
+  QC                                                             String?         @db.Text
+  user_query                                                     String?         @db.Text
+  added_date                                                     DateTime        @default(now()) @db.DateTime(0)
+  updated_date                                                   DateTime?       @default(now()) @db.DateTime(0)
+  model                                                          String?         @db.Text
+  topics                                                         topics          @relation(fields: [t_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_1")
+  subjects                                                       subjects        @relation(fields: [s_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_2")
+  chapters                                                       chapters        @relation(fields: [c_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_3")
+  cognitive_level_old_questions_cognitive_levelTocognitive_level cognitive_level @relation("old_questions_cognitive_levelTocognitive_level", fields: [cognitive_level], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_4")
+  ai_questions                                                   ai_questions    @relation(fields: [q_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_5")
+
+  @@index([c_id], map: "c_id")
+  @@index([cognitive_level], map: "cognitive_level")
+  @@index([q_id], map: "q_id")
+  @@index([question_type], map: "question_type")
+  @@index([s_id], map: "s_id")
+  @@index([t_id], map: "t_id")
+}
+
+model progress_table {
+  s_no             Int    @id @default(autoincrement())
+  uuid             String @db.VarChar(255)
+  progress_percent Float? @default(0) @db.Float
 }
 
 enum ai_performance_metrics_operation_type {

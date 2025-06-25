@@ -10,6 +10,7 @@ import { AcademicYearsModule } from './features/academic-years/academic-years.mo
 import { YearsModule } from './features/years/years.module';
 import { ProgramOutcomesModule } from './features/program-outcomes/program-outcomes.module';
 import { FileUploadModule } from './features/file-upload/file-upload.module';
+import { SyllabusModule } from './features/syllabus/syllabus.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { FileUploadModule } from './features/file-upload/file-upload.module';
     YearsModule,
     ProgramOutcomesModule,
     FileUploadModule,
+    SyllabusModule,
   ],
   controllers: [AppController],
   providers: [
