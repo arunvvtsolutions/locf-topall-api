@@ -4,7 +4,7 @@ import { GetSyllabusFileDto } from './dto/get-syllabus-file.dto';
 
 @Injectable()
 export class SyllabusService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getSyllabusFile(query: GetSyllabusFileDto) {
     return this.prisma.file_uploads.findMany({
@@ -41,31 +41,60 @@ export class SyllabusService {
   }
 
   async getCoursesByProgramId(programId: number) {
-    const programWithCourses = await this.prisma.programs.findUnique({
-      where: {
-        id: programId,
-      },
-      include: {
-        courses: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            description: true,
-            course_type: true,
-            credits: true,
-            practical_hours: true,
-            theory_hours: true,
-            syllabus_file_url: true,
+    try {
+      const programWithCourses = await this.prisma.programs.findUnique({
+        where: {
+          id: programId,
+        },
+        select: {
+          organization_id: true,
+          description: true,
+          created_at: true,
+          updated_at: true,
+          code: true,
+          courses: {
+            select: {
+              id: true,
+              code: true,
+              program_id: true,
+              subjects: {
+                select: {
+                  s_name: true,
+                },
+              },
+              description: true,
+              course_type: true,
+              credits: true,
+              syllabus_file_url: true,
+            },
           },
         },
-      },
-    });
-    if (!programWithCourses) {
-      return [];
+      });
+      const resModal = programWithCourses?.courses.map(course => ({
+        id: course.id,
+        program_id: course.program_id,
+        organization_id: programWithCourses.organization_id,
+        name: course.subjects.s_name,
+        code: course.code,
+        credits: course.credits,
+        description: course.description,
+        // subjects: course.subjects,
+        course_type: course.course_type,
+        syllabus_file_url: course.syllabus_file_url,
+        created_at: programWithCourses.created_at,
+        updated_at: programWithCourses.updated_at,
+      }));
+      if (!programWithCourses) {
+        return [];
+      }
+      console.log('Program with courses:', programWithCourses);
+
+      return resModal;
+    } catch (error) {
+      console.error('Error fetching program with courses:', error);
+      throw new Error('Could not fetch program with courses');
     }
-    return programWithCourses.courses;
-  }
+  };
 
   async getCourseOutcomesByCourseId(courseId: number) {
     return this.prisma.course_outcomes.findMany({
@@ -81,7 +110,7 @@ export class SyllabusService {
         course_id: courseId,
       },
       include: {
-        co_po_mapping_data: true,
+        // co_po_mapping_data: true,
       },
     });
   }

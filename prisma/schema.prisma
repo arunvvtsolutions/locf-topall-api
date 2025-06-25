@@ -669,7 +669,7 @@ model courses {
   description                   String?                         @db.Text
   course_type                   courses_course_type?
   credits                       Int?                            @default(0)
-  inst_hours                    Int?
+  instruction_hours             Int?
   syllabus_file_url             String?                         @db.VarChar(500)
   created_at                    DateTime?                       @db.DateTime(0)
   updated_at                    DateTime?                       @db.DateTime(0)
