@@ -11,6 +11,8 @@ export class YearsService {
   }
 
   async findAll() {
+    console.log('Fetching all years...');
+    
     try {
       const years = await this.prisma.years.findMany({
         select: {

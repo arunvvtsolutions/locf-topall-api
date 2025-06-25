@@ -9,6 +9,7 @@ import { ProgramManagementModule } from './features/program-management/program-m
 import { AcademicYearsModule } from './features/academic-years/academic-years.module';
 import { YearsModule } from './features/years/years.module';
 import { ProgramOutcomesModule } from './features/program-outcomes/program-outcomes.module';
+import { FileUploadModule } from './features/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ProgramOutcomesModule } from './features/program-outcomes/program-outco
     AcademicYearsModule,
     YearsModule,
     ProgramOutcomesModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [
