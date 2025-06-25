@@ -11,30 +11,39 @@ export class ProgramManagementService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProgramManagementDto: CreateProgramManagementDto) {
-    try {
-      const { program_type, academic_year_id, ...rest } = createProgramManagementDto;
-      
-      const academicYear = await this.prisma.academic_years.findUnique({
+  try {
+    const { program_type, academic_year_id, ...rest } = createProgramManagementDto;
+
+    return await this.prisma.$transaction(async (tx) => {
+      let academicYear = await tx.academic_years.findUnique({
         where: { id: academic_year_id },
       });
-
       if (!academicYear) {
-        throw new NotFoundException(`Academic year with ID ${academic_year_id} not found`);
+        academicYear = await tx.academic_years.create({
+          data: {
+            id: academic_year_id, 
+            year_id: academic_year_id,
+            is_active: true,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
       }
-
-      return this.prisma.programs.create({
+      return tx.programs.create({
         data: {
           ...rest,
-          academic_year_id : academic_year_id, 
+          academic_year_id: academicYear.id,
           program_type: program_type.toLowerCase() as any,
           status: (createProgramManagementDto.status?.toLowerCase() as programs_status) || 'draft',
         },
       });
-    } catch (error) {
-      console.error('Error creating program:', error);
-      throw error;
-    }
+    });
+  } catch (error) {
+    console.error('Error creating program:', error);
+    throw error;
   }
+}
+
 
   async findAll() {
     try {
