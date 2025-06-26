@@ -10,9 +10,7 @@ export class YearsService {
     return 'This action adds a new year';
   }
 
-  async findAll() {
-    console.log('Fetching all years...');
-    
+  async findAll() {   
     try {
       const years = await this.prisma.years.findMany({
         select: {
@@ -22,7 +20,6 @@ export class YearsService {
           years: true,
         },
       });
-      console.log(years);
 
       const resModel = years.map((year) => {
         return{

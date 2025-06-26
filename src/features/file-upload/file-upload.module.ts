@@ -36,7 +36,6 @@ import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
           },
         };
         
-        console.log('S3 Client Config:', { region });
         return new S3Client(config);
       },
       inject: [ConfigService],

@@ -75,7 +75,7 @@ export class SyllabusService {
         organization_id: programWithCourses.organization_id,
         name: course.subjects.s_name,
         code: course.code,
-        description : programWithCourses.description,
+        description: programWithCourses.description,
         credits: course.credits,
         // subjects: course.subjects,
         course_type: course.course_type,
@@ -86,7 +86,6 @@ export class SyllabusService {
       if (!programWithCourses) {
         return [];
       }
-      console.log('Program with courses:', programWithCourses);
 
       return resModal;
     } catch (error) {
@@ -97,20 +96,23 @@ export class SyllabusService {
 
   async getCourseOutcomesByCourseId(courseId: number) {
     try {
-      const courseOutcomes = await this.prisma.courses.findMany({
+      const courseOutcomes = await this.prisma.course_outcomes.findMany({
         where: {
-          id: courseId,
+          course_id: courseId,
         },
         select: {
           id: true,
-          code: true,
-          program_id: true,
-          credits: true,
-         
-        }
+          co_number: true,
+          content: true,
+        },
       });
-      console.log('courseOutcomes', courseOutcomes);
-      return courseOutcomes;
+      const resModel = courseOutcomes.map(data => ({
+        id: data.id,
+        code: data.co_number,
+        description: data.content,
+        courseId: courseId,
+      }));
+      return resModel;
     } catch (error) {
       console.error('Error fetching course outcomes:', error);
       throw new Error('Could not fetch course outcomes');
@@ -118,13 +120,62 @@ export class SyllabusService {
   }
 
   async getCOPOMappingsByCourseId(courseId: number) {
-    return this.prisma.co_po_mappings.findMany({
-      where: {
-        course_id: courseId,
-      },
-      include: {
-        // co_po_mapping_data: true,
-      },
-    });
+    try {
+      // Step 1: Fetch CO-PO mappings for the given course
+      const coPoData = await this.prisma.co_po_mappings.findMany({
+        where: {
+          course_id: courseId,
+        },
+        select: {
+          id: true,
+          course_id: true,
+          co_label: true,
+          po_label: true,
+          value: true,
+        },
+      });
+
+      // ✅ Extract all unique co_labels
+      const uniqueCoLabels = [...new Set(coPoData.map(mapping => mapping.co_label))];
+
+      // Step 2: Fetch all program outcomes (for matching po_label)
+      const allProgramOutcomes = await this.prisma.program_outcomes.findMany({
+        select: {
+          code: true,
+          description: true,
+          program_id: true,
+        },
+      });
+
+      // ✅ Step 3: Fetch course_outcomes based on co_number IN [co_label list]
+      const courseOutcomes = await this.prisma.course_outcomes.findMany({
+        where: {
+          co_number: {
+            in: uniqueCoLabels,
+          },
+        },
+        select: {
+          co_number: true,
+          content: true,
+        },
+      });
+
+      // Step 4: Enrich the co_po_mappings with both program_outcome and course_outcome
+      const enrichedData = coPoData.map(mapping => {
+        const matchedPO = allProgramOutcomes.find(po => po.code === mapping.po_label);
+        const matchedCO = courseOutcomes.find(co => co.co_number === mapping.co_label);
+
+        return {
+          ...mapping,
+          program_outcome_description: matchedPO?.description || null,
+          course_outcome_content: matchedCO?.content || null,
+        };
+      });
+
+      return enrichedData;
+    } catch (error) {
+      console.error('Error fetching CO-PO mappings:', error);
+      throw new Error('Could not fetch CO-PO mappings');
+    }
   }
 }

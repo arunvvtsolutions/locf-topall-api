@@ -583,15 +583,14 @@ model co_attainments {
 }
 
 model co_po_mappings {
-  id           Int       @id @default(autoincrement())
-  course_id    Int
-  mapping_data Json
-  created_at   DateTime? @db.DateTime(0)
-  updated_at   DateTime? @db.DateTime(0)
-  co_label     String    @db.VarChar(10)
-  po_label     String    @db.VarChar(10)
-  value        Int
-  courses      courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "co_po_mappings_ibfk_1")
+  id         Int       @id @default(autoincrement())
+  course_id  Int
+  co_label   String    @db.VarChar(10)
+  po_label   String    @db.VarChar(10)
+  value      Int
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  courses    courses   @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "co_po_mappings_ibfk_1")
 
   @@index([course_id], map: "course_id")
 }
@@ -656,12 +655,14 @@ model course_units {
   course_id       Int?
   created_at      DateTime? @db.DateTime(0)
   hours_allocated Int?
-  title           String    @db.VarChar(255)
+  title           Int
   unit_number     Int
   updated_at      DateTime? @db.DateTime(0)
   courses         courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "course_units_ibfk_1")
+  chapters        chapters  @relation(fields: [title], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "course_units_ibfk_2")
 
   @@index([course_id], map: "course_id")
+  @@index([title], map: "title")
 }
 
 model courses {
@@ -680,7 +681,6 @@ model courses {
   file_upload_id                Int?
   semester_id                   Int?
   co_mapping                    Json?
-  po_mapping                    Json?
   extracted_data                Json?
   learning_outcomes             Json?
   prerequisites                 Json?
@@ -826,7 +826,6 @@ model file_uploads {
   id                 Int       @id @default(autoincrement())
   file_path          String    @db.VarChar(1000)
   file_size          Int
-  mime_type          String    @db.VarChar(255)
   original_filename  String    @db.VarChar(500)
   program_id         Int
   stored_filename    String    @db.VarChar(500)
@@ -941,14 +940,13 @@ model kpi_values {
 }
 
 model learning_objectives {
-  id               Int       @id @default(autoincrement())
-  lo_number        Int
-  description      String    @db.Text
-  confidence_score Float?
-  course_id        Int?
-  created_at       DateTime? @db.DateTime(0)
-  updated_at       DateTime? @db.DateTime(0)
-  courses          courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "learning_objectives_ibfk_1")
+  id          Int       @id @default(autoincrement())
+  lo_number   Int
+  description String    @db.Text
+  course_id   Int?
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  courses     courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "learning_objectives_ibfk_1")
 
   @@index([course_id], map: "course_id")
 }
@@ -1763,15 +1761,16 @@ model web_resources {
 }
 
 model chapters {
-  s_no          Int             @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   s_id          Int
   c_name        String          @db.VarChar(255)
   status        Int             @default(1)
-  is_deleted    Int             @default(0)
+  is_deleted    Int?            @default(0)
   added_date    DateTime        @default(now()) @db.DateTime(0)
   updated_date  DateTime        @default(now()) @db.DateTime(0)
   ai_questions  ai_questions[]
   subjects      subjects        @relation(fields: [s_id], references: [id], onUpdate: Restrict, map: "Subject")
+  course_units  course_units[]
   old_questions old_questions[]
   topics        topics[]
 
@@ -1791,7 +1790,6 @@ model employees {
   updated_date DateTime   @default(now()) @db.DateTime(0)
   description  String     @db.VarChar(255)
   subjects     subjects[]
-  topics       topics[]
 }
 
 model program_outcomes {
@@ -1833,19 +1831,16 @@ model topics {
   c_id          Int
   t_name        String          @db.VarChar(255)
   short_url     String          @db.VarChar(50)
-  employee_id   Int
   status        Int             @default(1)
   is_deleted    Int             @default(0)
   added_date    DateTime        @default(now()) @db.DateTime(0)
   updated_date  DateTime        @default(now()) @db.DateTime(0)
   ai_questions  ai_questions[]
   old_questions old_questions[]
-  chapters      chapters        @relation(fields: [c_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Chapters")
-  employees     employees       @relation(fields: [employee_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "Employees")
+  chapters      chapters        @relation(fields: [c_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Chapters")
   subjects      subjects        @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Subjects")
 
   @@index([c_id], map: "Chapters")
-  @@index([employee_id], map: "Employees")
   @@index([s_id], map: "Subjects")
 }
 
@@ -1878,7 +1873,7 @@ model ai_questions {
   model_id                                                      Int
   topics                                                        topics          @relation(fields: [t_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "ai_questions_ibfk_1")
   subjects                                                      subjects        @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_questions_ibfk_2")
-  chapters                                                      chapters        @relation(fields: [c_id], references: [s_no], onDelete: NoAction, onUpdate: NoAction, map: "ai_questions_ibfk_3")
+  chapters                                                      chapters        @relation(fields: [c_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_questions_ibfk_3")
   cognitive_level_ai_questions_cognitive_levelTocognitive_level cognitive_level @relation("ai_questions_cognitive_levelTocognitive_level", fields: [cognitive_level], references: [s_no], onUpdate: NoAction, map: "ai_questions_ibfk_4")
   users                                                         User            @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "ai_questions_ibfk_5")
   question_types                                                question_types  @relation(fields: [question_type], references: [s_no], onDelete: Cascade, map: "ai_questions_ibfk_6")
@@ -1983,7 +1978,7 @@ model old_questions {
   model                                                          String?         @db.Text
   topics                                                         topics          @relation(fields: [t_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_1")
   subjects                                                       subjects        @relation(fields: [s_id], references: [id], onDelete: Cascade, map: "old_questions_ibfk_2")
-  chapters                                                       chapters        @relation(fields: [c_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_3")
+  chapters                                                       chapters        @relation(fields: [c_id], references: [id], onDelete: Cascade, map: "old_questions_ibfk_3")
   cognitive_level_old_questions_cognitive_levelTocognitive_level cognitive_level @relation("old_questions_cognitive_levelTocognitive_level", fields: [cognitive_level], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_4")
   ai_questions                                                   ai_questions    @relation(fields: [q_id], references: [s_no], onDelete: Cascade, map: "old_questions_ibfk_5")
 

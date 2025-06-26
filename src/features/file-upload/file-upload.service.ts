@@ -87,7 +87,6 @@ export class FileUploadService {
         program_id: Number(programId),
       });
   
-      console.log("res",res);
       
       return {
         key,
